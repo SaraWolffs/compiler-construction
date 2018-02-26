@@ -4,16 +4,20 @@ import Data.So
 
 %default total 
 
-eqProof : (x:_) -> (y:_) -> {auto ok : x=y} -> Maybe _
-eqProof _ _ = Nothing
+public export
+TestCase : Type
+TestCase = Maybe String
 
-eqTest : Eq a => (x:a) -> (y:a) -> (msg:b) -> Maybe b
+eqProof : (x:_) -> (y:_) -> {auto ok : x=y} -> ()
+eqProof _ _ = ()
+
+eqTest : Eq a => (x:a) -> (y:a) -> (msg:String) -> TestCase
 eqTest x y msg = if x == y then Nothing else pure msg
 
-propProof : (x:_) -> (p:a->Bool) -> {auto ok : So (p x)} -> Maybe _
-propProof _ _ = Nothing
+propProof : (x:_) -> (p:a->Bool) -> {auto ok : So (p x)} -> ()
+propProof _ _ = ()
 
-propTest : (x:a) -> (p:a->Bool) -> (msg:b) -> Maybe b
+propTest : (x:a) -> (p:a->Bool) -> (msg:String) -> TestCase
 propTest x p msg = if p x then Nothing else pure msg
 
 syntax trivially [a] is [b] = eqProof a b
