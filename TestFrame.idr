@@ -3,8 +3,8 @@ module TestFrame
 import Data.So
 
 %default total 
+%access public export
 
-public export
 TestCase : Type
 TestCase = Maybe String
 

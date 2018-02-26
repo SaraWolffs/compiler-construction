@@ -1,8 +1,8 @@
 module SPL.Parser
 
-import Text.Lexer
+import public Text.Lexer
 
-export 
+public export
 data SplToken : Type where 
   TokNat : Nat -> SplToken
 
