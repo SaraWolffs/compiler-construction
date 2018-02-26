@@ -20,8 +20,13 @@ propProof _ _ = ()
 propTest : (x:a) -> (p:a->Bool) -> (msg:String) -> TestCase
 propTest x p msg = if p x then Nothing else pure msg
 
+-- Specs verified as proofs. Evaluate to ()
 syntax trivially [a] is [b] = eqProof a b
 syntax provably [a] is [b] by [witness] = eqProof a b {ok=witness}
+syntax trivially [a] satisfies [p] = propProof a p
+syntax provably [a] satisfies [p] by [witness] = propProof a p {ok=witness}
+
+-- Specs verified by tests. Evaluate to Nothing, or a failmessage.
 syntax check [a] equals [b]  = 
   eqTest a b ("Failed test:\nExpected: " ++ show b ++ "\nGot: " ++ show a ++ "\n")
 syntax check [a] satisfies [p] meaning [desc] = 
@@ -31,18 +36,3 @@ testResults : Show a => List (Maybe a) -> String
 testResults spec with (catMaybes spec)
   testResults spec | [] = "All tests passed"
   testResults spec | failures = unlines (map show failures)
-
-{- ALL DEPRECATED BELOW
-total
-take : Nat -> Stream a -> List a
-take Z _ = []
-take (S n) (h::t) = h :: take n t
-
-
-
-spec : List (Maybe String)
-spec = [
-  trivially (parse "5") is (ASTInt 5),
-  provably (parse "5 + 7") is (ASTPlus (ASTInt 5) (ASTInt 7)) by addParseProof,
-  ]
--}
