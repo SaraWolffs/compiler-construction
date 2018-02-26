@@ -8,7 +8,8 @@ testlex : String -> List SplToken
 testlex = (map tok) . fst . lexSpl
 
 spec : List TestCase
-spec = [check testlex "5" equals [TokNat 5]]
+spec = [check testlex "5" equals [TokNat 5],
+        check testlex "=" equals [TokEq]]
 
 export
 printResults : IO ()
