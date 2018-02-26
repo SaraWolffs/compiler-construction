@@ -34,5 +34,5 @@ syntax check [a] satisfies [p] meaning [desc] =
 
 testResults : List (TestCase) -> String
 testResults spec with (catMaybes spec)
-  testResults spec | [] = "All tests passed"
+  testResults spec | [] = "All tests passed\n"
   testResults spec | failures = unlines failures

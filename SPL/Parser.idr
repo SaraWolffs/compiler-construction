@@ -15,7 +15,7 @@ Eq SplToken where
   (TokNat n) == (TokNat m) = n == m
 
 splTokMap : TokenMap SplToken
-splTokMap = []
+splTokMap = [(digits,TokNat . cast)]
 
 export
 lexSpl : String -> (List (TokenData SplToken), (Int,Int,String))
