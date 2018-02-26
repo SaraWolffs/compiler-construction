@@ -19,7 +19,8 @@ Eq SplToken where
   _          == _          = False
 
 splTokMap : TokenMap SplToken
-splTokMap = [(digits,TokNat . cast)]
+splTokMap = [(digits,TokNat . cast),
+             (is '=',const TokEq)]
 
 export
 lexSpl : String -> (List (TokenData SplToken), (Int,Int,String))
