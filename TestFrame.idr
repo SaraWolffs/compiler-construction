@@ -32,7 +32,7 @@ syntax check [a] equals [b]  =
 syntax check [a] satisfies [p] meaning [desc] = 
   propTest a p ("Failed test:\n" ++ show a ++ " doesn't satisfy " ++ desc ++ "\n")
 
-testResults : Show a => List (Maybe a) -> String
+testResults : List (TestCase) -> String
 testResults spec with (catMaybes spec)
   testResults spec | [] = "All tests passed"
-  testResults spec | failures = unlines (map show failures)
+  testResults spec | failures = unlines failures

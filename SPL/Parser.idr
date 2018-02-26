@@ -6,6 +6,14 @@ public export
 data SplToken : Type where 
   TokNat : Nat -> SplToken
 
+export
+Show SplToken where
+  show (TokNat n) = "TokNat" ++ show n
+
+export 
+Eq SplToken where
+  (TokNat n) == (TokNat m) = n == m
+
 splTokMap : TokenMap SplToken
 splTokMap = []
 
