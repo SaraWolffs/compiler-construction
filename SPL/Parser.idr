@@ -2,17 +2,23 @@ module SPL.Parser
 
 import public Text.Lexer
 
+-- Derivation libraries
+import Derive.Show
+import Data.Vect
+import Language.Reflection.Elab
+import Language.Reflection.Utils
+import Pruviloj.Core
+import Pruviloj.Internals.TyConInfo
+import Pruviloj.Internals
+%language ElabReflection
+
 public export
 data SplToken : Type where 
   TokNat : Nat -> SplToken
   TokEq : SplToken
   TokWhite : SplToken
 
-export
-Show SplToken where
-  show (TokNat n) = "TokNat" ++ show n
-  show TokEq = "TokEq"
-  show TokWhite = "TokWhite"
+%runElab deriveShow `{{SPL.Parser.SplToken}}
 
 export 
 Eq SplToken where

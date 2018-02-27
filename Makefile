@@ -1,6 +1,6 @@
 .PHONY: test
 
 test :
-	@idris -p contrib RunTests.idr -o test
+	@idris -p contrib -p pruviloj RunTests.idr -o test
 	@./test
 	@rm test
