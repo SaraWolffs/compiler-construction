@@ -43,15 +43,27 @@ Id = Lexer.identifier
 Special s = Lexer.structural matching s
 Key k = Lexer.key matching k
 Brac t = Lexer.brac matching t
-Pair p = Brac '(' <+> p <+> Special ',' <+> p <+> Brac ')'
-Compound p = Brac '{' <+> p <+> Brac '}'
+Parens p = Brac '(' <+> p <+> Brac ')' 
+Braced p = Brac '{' <+> p <+> Brac '}'
+Pair p = Parens (p <+> Special ',' <+> p)
+
+BasicType = Key 'Int' | Key 'Bool' | Key 'Char'
+Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']' | Id
 RetType = Type | 'Void'
-Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']'
-FType = Type* <+> Special '->' <+> RetType
-FunDecl = Id <+> Brac '(' <+> [FArgs] <+> Brac ')' <+> [Special '::' <+> FType] 
-FunBod = <+> Brac '{' <+> FunBod
-FunDef = FunDecl <+> FunBod
+FType = Type* <+> Special '->' <+> RetType 
+Params = Id <+> [Special ',' <+> Params]     // Renamed from FArgs
+FunDecl = Id <+> Parens ([Params]) <+> [Special '::' <+> FType] 
+
+#SPECIAL, parsed as contex-sensitive.
+Chainl p op = p <+> [op <+> p]
+#compound(try all matching alternatives, in order of appearance)
+Exp (n+k) = Exp n
+
+
 VarDef = (Key 'var' | Type) <+> Id <+> Special '=' <+> Exp toplevel <+> Special ';'
+
+
+FunBod = Braced (VarDef* <+> Stmt+)
+FunDef = FunDecl <+> FunBod
 Def = VarDef | FunDef
 SPL = Def*
-
