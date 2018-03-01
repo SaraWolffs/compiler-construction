@@ -1,0 +1,48 @@
+Lexer, (redundant: prefer left alternatives), prefer first matching element:
+token = (key <<|> id) | brace | structural | operator | number
+reserved = {'var', 'Void', 'Int', 'Bool', 'Char', 'if', 'else','while',
+    'return', 'False', 'True', 'hd', 'tl', 'fst', 'snd', '[]'}
+word = alpha <+> (is '_' | alphanum)*
+keyword = in {w in word | in reserved}
+var = in {w in word | not in reserved}
+brace = in {'(',')','{','}','[',']'}
+structural = (is '=' <+> reject '=') | in {';', '.', '->', ',', '\'', '"'}
+operator = in {'+', '*', '/', '%', '==', '<=', '<', '>=', '>', '!=', '!', '&&',
+ '||', ':'} | is '-' <+> reject '>' 
+number = (digit)+
+Lexer Defined.
+
+Since the lexer produces tokens with content, and expressions and operators have
+a hierarchy, we extend the grammar notation with arguments: concatenation is now
+denoted by <+>, while A B means "Nonterminal A, with argument B". Obviously, A
+should take an argument. "Don't care" is denoted by _ . 
+
+Keyword "matching" can be used to require the content of a token to match the
+second. So: Lexer.key matching 'Void' only recognizes Void, and Lexer.var
+matching 'Void' will never be satisfied because the lexer doesn't ever match
+'Void', a keyword, as a var.
+
+We also don't want constants all through our grammar, so we define some numbers
+here. Note that we don't really care about the exact numbers, just the order.
+The below list is intentionally sorted. 
+The grammar will be written such that lower numbers bind more strongly.
+atomlevel = 0
+neglevel = 2
+multlevel = 4
+pluslevel = 6
+complevel = 8
+notlevel = 10
+boollevel = 12
+conslevel = 14
+tuplevel = 16
+toplevel = 18
+
+
+Var = Lexer.var
+Special s = Lexer.structural matching s
+Key k = Lexer.key matching k
+VarDecl = 
+  (Key 'var' | Type) <+> Var <+> Special '=' <+> Exp toplevel <+> Special ';'
+Decl = VarDecl | FunDecl
+SPL = Decl*
+
