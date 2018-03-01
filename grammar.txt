@@ -1,18 +1,24 @@
 Lexer, (redundant: prefer left alternatives), prefer first matching element:
-token = (key <<|> identifier) | brac | structural | operator | number
+token = key | identifier | brac | structural | operator | number
 reserved = {'var', 'Void', 'Int', 'Bool', 'Char', 'if', 'else','while',
     'return', 'False', 'True', 'hd', 'tl', 'fst', 'snd', '[]'}
 word = alpha <+> (is '_' | alphanum)*
 keyword = in {w in word | in reserved}
 identifier = in {w in word | not in reserved}
 brac = in {'(',')','{','}','[',']'}
-structural = (is '=' <+> reject '=') | in {';', '.', '->', ',', '\'', '"', '::'}
+structural = (is '=' <+> reject '=') | in {';', '.', '->', ',', '::'}
 operator = in {'+', '*', '/', '%', '==', '<=', '<', '>=', '>', '!=', '!', '&&', '||'} 
     | is '-' <+> reject '>' 
     | is ':' <+> reject ':'
-number = (digit)+
+number  = (digit)+
+char    = is '\'' <+> (('\' <+> any) | non '\'') <+> is '\''   //memo: use escape
+string  = is '"' <+> (('\' <+> any) | non '"')* <+> is '"'     //memo: use quoted
+comment = lineComment '//' | blockComment '/*' '*/'
+whitespace = (space | tab | newline)+
 Lexer Defined.
 
+
+Notes on the full grammar:
 Since the lexer produces tokens with content, and expressions and operators have
 a hierarchy, we extend the grammar notation with arguments: concatenation is now
 denoted by <+>, while A B means "Nonterminal A, with argument B". Obviously, A
@@ -27,17 +33,21 @@ We also don't want constants all through our grammar, so we define some numbers
 here. Note that we don't really care about the exact numbers, just the order.
 The below list is intentionally sorted. 
 The grammar will be written such that lower numbers bind more strongly.
+
 atomlevel = 0
 neglevel = 2
 multlevel = 4
 pluslevel = 6
-complevel = 8
+ordlevel = 8
+eqlevel = 9
 notlevel = 10
 boollevel = 12
 conslevel = 14
 tuplevel = 16
 toplevel = 18
 
+Parser grammar:
+#PREPROCESSING: remove all Lexer.whitespace, remove all Lexer.comment
 
 Id = Lexer.identifier
 Special s = Lexer.structural matching s
@@ -54,11 +64,30 @@ FType = Type* <+> Special '->' <+> RetType
 Params = Id <+> [Special ',' <+> Params]     // Renamed from FArgs
 FunDecl = Id <+> Parens ([Params]) <+> [Special '::' <+> FType] 
 
+Lit = Lexer.number | Lexer.char | Lexer.string
+
+#compound(unambiguous)
+LOp multlevel = Op '*' | Op '/' | Op ''%'
+LOp pluslevel = Op '+' | Op '-'
+LOp ordlevel  = Op '<' | Op '>' | Op '<=' | Op '>='
+LOp eqlevel   = Op '==' | Op '!='
+LOp boollevel = Op '&&' | Op '||'
+
+ROp conslevel = Op ':'
+
+#compound(unambiguous)
+UnOp neglevel = Op '-'
+UnOp notlevel = Op '!'
+
 #SPECIAL: CHAINL(..), parse as contex-sensitive by monad-only chainl combinator
 #compound(try all matching alternatives, in order of appearance)
-Exp atomlevel = Lit | Parens Exp toplevel
+Exp atomlevel   = Lit | Parens (Exp toplevel) | Pair (Exp toplevel)
+                | Id <+> (Special '.' <+> Field)*
+                | Key 'False' | Key 'True' | Key '[]'
+                | FunCall
 Exp n = UnOp n <+> Exp n
-Exp (n+1) = CHAINL(Exp (n+1) <+> Op (n+1) <+> Exp n)
+Exp (n+1) = Exp n <+> ROp (n+1) <+> Exp (n+1)
+Exp (n+1) = CHAINL(Exp (n+1) <+> LOp (n+1) <+> Exp n)
 Exp (n+k) = Exp n
 
 
