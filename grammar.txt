@@ -1,10 +1,11 @@
 Lexer, (redundant: prefer left alternatives), prefer first matching element:
-token = key | identifier | brac | structural | operator | number
+token = key | identifier | field | brac | structural | operator | number
 reserved = {'var', 'Void', 'Int', 'Bool', 'Char', 'if', 'else','while',
-    'return', 'False', 'True', '.hd', '.tl', '.fst', '.snd', '[]'}
+    'return', 'False', 'True', '[]'} 
 word = alpha <+> (is '_' | alphanum)*
 keyword = in {w in word | in reserved}
 identifier = in {w in word | not in reserved}
+field = '.hd', '.tl', '.fst', '.snd'
 brac = in {'(',')','{','}','[',']'}
 structural = (is '=' <+> reject '=') | in {';', '->', ',', '::'}
 operator = in {'+', '*', '/', '%', '==', '<=', '<', '>=', '>', '!=', '!', '&&', '||'} 
@@ -50,20 +51,24 @@ Parser grammar:
 #PREPROCESSING: remove all Lexer.whitespace, remove all Lexer.comment
 
 Id = Lexer.identifier
+Field = Lexer.field*
 Special s = Lexer.structural matching s
 Key k = Lexer.key matching k
 Brac t = Lexer.brac matching t
 Parens p = Brac '(' <+> p <+> Brac ')' 
 Braced p = Brac '{' <+> p <+> Brac '}'
 Pair p = Parens (p <+> Special ',' <+> p)
-Field = Key '.hd' | Key '.tl' | Key '.fst' | Key '.snd'
 
 BasicType = Key 'Int' | Key 'Bool' | Key 'Char'
 Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']' | Id
+
 RetType = Type | 'Void'
 FType = Type* <+> Special '->' <+> RetType 
-Params = Id <+> [Special ',' <+> Params]     // Renamed from FArgs
+Params = Id <+> [Special ',' <+> Params]         // Renamed from FArgs
+Args   = Exp toplevel <+> [Special ',' <+> Args] // Renamed from ActArgs
 FunDecl = Id <+> Parens ([Params]) <+> [Special '::' <+> FType] 
+FunCall = Id <+> Parens ([Args])
+
 
 Lit = Lexer.number | Lexer.char | Lexer.string
 
@@ -83,7 +88,7 @@ UnOp notlevel = Op '!'
 #SPECIAL: CHAINL(..), parse as contex-sensitive by monad-only chainl combinator
 #compound(try all matching alternatives, in order of appearance)
 Exp atomlevel   = Lit | Parens (Exp toplevel) | Pair (Exp toplevel)
-                | Id <+> (Field*)
+                | Id <+> Field
                 | Key 'False' | Key 'True' | Key '[]'
                 | FunCall
 Exp n = UnOp n <+> Exp n
@@ -97,10 +102,13 @@ VarDef = (Key 'var' | Type) <+> Id <+> Special '=' <+> Exp toplevel <+> Special 
 // structures can affect any statement, and {Stmt*} is a (compound) statement.
 Stmt    = Key 'if' <+> Parens (Exp toplevel) <+> Stmt <+> [Key 'else' <+> Stmt]
         | Key 'while' <+> Parens (Exp toplevel) <+> Stmt
-        | Id <+> (Special '.'
+        | Id <+> Field <+> Special '=' <+> Exp toplevel <+> Special ';'
+        | Funcall <+> Special ';'
+        | Key 'return' <+> Exp toplevel <+> Special ';'
 
 
 FunBod = Braced (VarDef* <+> Stmt+)
 FunDef = FunDecl <+> FunBod
 Def = VarDef | FunDef
 SPL = Def*
+Parser grammar Defined.
