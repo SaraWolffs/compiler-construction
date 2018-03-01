@@ -54,9 +54,11 @@ FType = Type* <+> Special '->' <+> RetType
 Params = Id <+> [Special ',' <+> Params]     // Renamed from FArgs
 FunDecl = Id <+> Parens ([Params]) <+> [Special '::' <+> FType] 
 
-#SPECIAL, parsed as contex-sensitive.
-Chainl p op = p <+> [op <+> p]
+#SPECIAL: CHAINL(..), parse as contex-sensitive by monad-only chainl combinator
 #compound(try all matching alternatives, in order of appearance)
+Exp atomlevel = Lit | Parens Exp toplevel
+Exp n = UnOp n <+> Exp n
+Exp (n+1) = CHAINL(Exp (n+1) <+> Op (n+1) <+> Exp n)
 Exp (n+k) = Exp n
 
 
