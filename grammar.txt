@@ -1,14 +1,15 @@
 Lexer, (redundant: prefer left alternatives), prefer first matching element:
-token = (key <<|> id) | brace | structural | operator | number
+token = (key <<|> identifier) | brac | structural | operator | number
 reserved = {'var', 'Void', 'Int', 'Bool', 'Char', 'if', 'else','while',
     'return', 'False', 'True', 'hd', 'tl', 'fst', 'snd', '[]'}
 word = alpha <+> (is '_' | alphanum)*
 keyword = in {w in word | in reserved}
-var = in {w in word | not in reserved}
-brace = in {'(',')','{','}','[',']'}
-structural = (is '=' <+> reject '=') | in {';', '.', '->', ',', '\'', '"'}
-operator = in {'+', '*', '/', '%', '==', '<=', '<', '>=', '>', '!=', '!', '&&',
- '||', ':'} | is '-' <+> reject '>' 
+identifier = in {w in word | not in reserved}
+brac = in {'(',')','{','}','[',']'}
+structural = (is '=' <+> reject '=') | in {';', '.', '->', ',', '\'', '"', '::'}
+operator = in {'+', '*', '/', '%', '==', '<=', '<', '>=', '>', '!=', '!', '&&', '||'} 
+    | is '-' <+> reject '>' 
+    | is ':' <+> reject ':'
 number = (digit)+
 Lexer Defined.
 
@@ -38,11 +39,19 @@ tuplevel = 16
 toplevel = 18
 
 
-Var = Lexer.var
+Id = Lexer.identifier
 Special s = Lexer.structural matching s
 Key k = Lexer.key matching k
-VarDecl = 
-  (Key 'var' | Type) <+> Var <+> Special '=' <+> Exp toplevel <+> Special ';'
-Decl = VarDecl | FunDecl
-SPL = Decl*
+Brac t = Lexer.brac matching t
+Pair p = Brac '(' <+> p <+> Special ',' <+> p <+> Brac ')'
+Compound p = Brac '{' <+> p <+> Brac '}'
+RetType = Type | 'Void'
+Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']'
+FType = Type* <+> Special '->' <+> RetType
+FunDecl = Id <+> Brac '(' <+> [FArgs] <+> Brac ')' <+> [Special '::' <+> FType] 
+FunBod = <+> Brac '{' <+> FunBod
+FunDef = FunDecl <+> FunBod
+VarDef = (Key 'var' | Type) <+> Id <+> Special '=' <+> Exp toplevel <+> Special ';'
+Def = VarDef | FunDef
+SPL = Def*
 
