@@ -15,8 +15,16 @@ import Pruviloj.Internals
 
 public export
 data SplToken : Type where 
-  TokNat : Nat -> SplToken
-  TokEq : SplToken
+  TokKey : String -> SplToken
+  TokId : String -> SplToken
+  TokField : String -> SplToken
+  TokBrac : Char -> SplToken
+  TokSpecial : String -> SplToken
+  TokOp : String -> SplToken
+  TokNumber : Nat -> SplToken
+  TokChar : Char -> SplToken
+  TokString : String -> SplToken
+  TokComment : String -> SplToken
   TokWhite : SplToken
 
 %runElab deriveShow `{{SPL.Parser.SplToken}}
@@ -32,6 +40,11 @@ skipWhites [] = []
 skipWhites (h::t) with (tok h)
   skipWhites (h::t) | TokWhite = skipWhites t
   skipWhites (h::t) | _ = h :: skipWhites t
+
+isSemantic : SplToken -> Bool
+isSemantic (TokComment _) = False
+isSemantic TokWhite = False
+isSemantic _ = True
 
 export
 lexSpl : String -> (List (TokenData SplToken), (Int,Int,String))
