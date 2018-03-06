@@ -21,7 +21,7 @@ data SplToken : Type where
   TokBrac : Char -> SplToken
   TokSpecial : String -> SplToken
   TokOp : String -> SplToken
-  TokNumber : Nat -> SplToken
+  TokNum : Nat -> SplToken
   TokChar : Char -> SplToken
   TokString : String -> SplToken
   TokComment : String -> SplToken
@@ -31,8 +31,8 @@ data SplToken : Type where
 %runElab deriveEq `{{SPL.Parser.SplToken}}
 
 splTokMap : TokenMap SplToken
-splTokMap = [(digits,TokNat . cast),
-             (is '=',const TokEq),
+splTokMap = [(digits,TokNum . cast),
+             (is '=',TokSpecial),
              (spaces,const TokWhite)]
 
 skipWhites : List (TokenData SplToken) -> List (TokenData SplToken)
