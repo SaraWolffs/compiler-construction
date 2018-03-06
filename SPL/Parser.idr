@@ -4,6 +4,7 @@ import public Text.Lexer
 
 -- Derivation libraries
 import Derive.Show
+import Derive.Eq
 import Data.Vect
 import Language.Reflection.Elab
 import Language.Reflection.Utils
@@ -19,13 +20,7 @@ data SplToken : Type where
   TokWhite : SplToken
 
 %runElab deriveShow `{{SPL.Parser.SplToken}}
-
-export 
-Eq SplToken where
-  (TokNat n) == (TokNat m) = n == m
-  TokEq      == TokEq      = True
-  TokWhite   == TokWhite   = True
-  _          == _          = False
+%runElab deriveEq `{{SPL.Parser.SplToken}}
 
 splTokMap : TokenMap SplToken
 splTokMap = [(digits,TokNat . cast),

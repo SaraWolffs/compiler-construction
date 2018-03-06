@@ -9,6 +9,7 @@ import Pruviloj.Internals
 import Pruviloj.Core
 
 %access private
+%language ElabReflection
 
 isRType : Raw -> Bool
 isRType RType = True
