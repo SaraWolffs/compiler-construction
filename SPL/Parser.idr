@@ -31,9 +31,10 @@ data SplToken : Type where
 %runElab deriveEq `{{SPL.Parser.SplToken}}
 
 splTokMap : TokenMap SplToken
-splTokMap = [(digits,TokNum . cast),
-             (is '=',TokSpecial),
-             (spaces,const TokWhite)]
+splTokMap = [(digits, TokNum . cast),
+             (is '=', TokSpecial),
+             (spaces, const TokWhite),
+             (alpha <+> many (is '_' <|> alphaNum), TokKey)]
 
 skipWhites : List (TokenData SplToken) -> List (TokenData SplToken)
 skipWhites [] = []
