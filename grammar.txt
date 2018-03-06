@@ -1,13 +1,13 @@
 Lexer, (redundant: prefer left alternatives), prefer first matching element:
 token = key | identifier | field | brac | structural | operator | number
 reserved = {'var', 'Void', 'Int', 'Bool', 'Char', 'if', 'else','while',
-    'return', 'False', 'True', '[]'} 
+    'return', 'False', 'True'} 
 word = alpha <+> (is '_' | alphanum)*
 keyword = in {w in word | in reserved}
 identifier = in {w in word | not in reserved}
 field = '.hd', '.tl', '.fst', '.snd'
 brac = in {'(',')','{','}','[',']'}
-structural = (is '=' <+> reject '=') | in {';', '->', ',', '::'}
+special = (is '=' <+> reject '=') | in {';', '->', ',', '::', '[]'}
 operator = in {'+', '*', '/', '%', '==', '<=', '<', '>=', '>', '!=', '!', '&&', '||'} 
     | is '-' <+> reject '>' 
     | is ':' <+> reject ':'
@@ -52,7 +52,7 @@ Parser grammar:
 
 Id = Lexer.identifier
 Field = Lexer.field*
-Special s = Lexer.structural matching s
+Special s = Lexer.special matching s
 Key k = Lexer.key matching k
 Brac t = Lexer.brac matching t
 Parens p = Brac '(' <+> p <+> Brac ')' 
