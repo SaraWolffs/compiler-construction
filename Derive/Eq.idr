@@ -9,7 +9,6 @@ import Pruviloj.Internals
 import Pruviloj.Core
 
 %access private
-%language ElabReflection
 
 isRType : Raw -> Bool
 isRType RType = True
@@ -262,49 +261,3 @@ deriveEq fam =
         tcFunArg : TyConArg -> FunArg
         tcFunArg (TyConParameter x) = record {plicity = Implicit} x
         tcFunArg (TyConIndex x) = record {plicity = Implicit} x
-
-
-
-namespace TestDecls
-  -- Can't derive Eq for this one!
-  data SimpleFun a b = MkSimpleFun (a -> b)
-
-  data MyNat = MyZ | MyS MyNat
-
-  data MyList a = Nil | (::) a (MyList a)
-
-  namespace V
-    data MyVect : MyNat -> Type -> Type where
-      Nil : MyVect MyZ a
-      (::) : a -> MyVect n a -> MyVect (MyS n) a
-
-  -- All elements of this should be Eq, because it's for runtime and the Nat is erased
-  data CompileTimeNat : Type where
-    MkCTN : .(n : Nat) -> CompileTimeNat
-
-decl syntax derive Eq for {n} = %runElab (deriveEq `{n})
-
-
-derive Eq for MyNat
-derive Eq for MyList
-derive Eq for MyVect
-derive Eq for CompileTimeNat
-
-
-
-
-myNatEqRefl : (n : MyNat) -> n == n = True
-myNatEqRefl MyZ = Refl
-myNatEqRefl (MyS n') with (myNatEqRefl n')
-  myNatEqRefl (MyS n') | ih = rewrite ih in Refl
-
-myNatListEqRefl : (xs : MyList MyNat) -> xs == xs = True
-myNatListEqRefl [] = Refl
-myNatListEqRefl (x :: xs) with (myNatEqRefl x)
-  myNatListEqRefl (x :: xs) | headEq with (myNatListEqRefl xs)
-    myNatListEqRefl (x :: xs) | headEq | tailEq = rewrite headEq in
-                                                  rewrite tailEq in
-                                                  Refl
-
-ctnEqTrivial : (j, k : CompileTimeNat) -> j == k = True
-ctnEqTrivial (MkCTN _) (MkCTN _) = Refl
