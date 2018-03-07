@@ -31,7 +31,13 @@ spec = [check testlex "" equals (the (List SplToken) []),
         check testlex ".hd" equals [TokField "hd"],
         check testlex ".tl" equals [TokField "tl"],
         check testlex ".fst" equals [TokField "fst"],
-        check testlex ".snd" equals [TokField "snd"]
+        check testlex ".snd" equals [TokField "snd"],
+        check testlex "() {} [ ]" equals [TokBrac '(',TokBrac ')',
+                                         TokBrac '}',TokBrac '{',
+                                         TokBrac '[',TokBrac ']'],
+        check testlex "[" equals [TokBrac '['],
+        check testlex "]" equals [TokBrac ']']
+
         ]
 
 export
