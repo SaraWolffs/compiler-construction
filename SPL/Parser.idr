@@ -11,6 +11,7 @@ import Language.Reflection.Utils
 import Pruviloj.Core
 import Pruviloj.Internals.TyConInfo
 import Pruviloj.Internals
+import Data.Combinators.Applicative
 %language ElabReflection
 
 public export
@@ -30,11 +31,30 @@ data SplToken : Type where
 %runElab deriveShow `{{SPL.Parser.SplToken}}
 %runElab deriveEq `{{SPL.Parser.SplToken}}
 
+reserved : List String
+reserved =
+  ["var","Void","Int","Bool","Char","if","else","while","return","False","True"]
+
+isKey : String -> Bool
+isKey = flip elem reserved
+
+-- Idris has a combinator-unfriendly implementation of Lazy.
+eagerIf : Bool -> a -> a -> a
+eagerIf True = const
+eagerIf False = flip const
+
+-- For illustrative purposes: 
+fork3 : (a -> b -> c -> o) -> (i -> a) -> (i -> b) -> (i -> c) -> i -> o
+fork3 f a b c = [| f a b c |]
+
+splitKeysIds : String -> SplToken
+splitKeysIds = [| eagerIf isKey TokKey TokId |]
+
 splTokMap : TokenMap SplToken
 splTokMap = [(digits, TokNum . cast),
              (is '=', TokSpecial),
              (spaces, const TokWhite),
-             (alpha <+> many (is '_' <|> alphaNum), TokKey)]
+             (alpha <+> many (is '_' <|> alphaNum), splitKeysIds)]
 
 skipWhites : List (TokenData SplToken) -> List (TokenData SplToken)
 skipWhites [] = []
