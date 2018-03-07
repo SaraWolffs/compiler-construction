@@ -13,6 +13,7 @@ import Pruviloj.Internals.TyConInfo
 import Pruviloj.Internals
 import Data.Combinators.Applicative
 %language ElabReflection
+%default total
 
 public export
 data SplToken : Type where 
@@ -35,6 +36,9 @@ reserved : List String
 reserved =
   ["var","Void","Int","Bool","Char","if","else","while","return","False","True"]
 
+fields : List String
+fields = ["hd","tl","fst","snd"]
+
 isKey : String -> Bool
 isKey = flip elem reserved
 
@@ -54,7 +58,9 @@ splTokMap : TokenMap SplToken
 splTokMap = [(digits, TokNum . cast),
              (is '=', TokSpecial),
              (spaces, const TokWhite),
-             (alpha <+> many (is '_' <|> alphaNum), splitKeysIds)]
+             (alpha <+> many (is '_' <|> alphaNum), splitKeysIds),
+             (choiceMap (exact . strCons '.') fields, TokField . assert_total strTail)
+             ]
 
 skipWhites : List (TokenData SplToken) -> List (TokenData SplToken)
 skipWhites [] = []
