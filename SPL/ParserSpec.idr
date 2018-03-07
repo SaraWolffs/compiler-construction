@@ -27,7 +27,11 @@ spec = [check testlex "" equals (the (List SplToken) []),
         check testlex "True" equals [TokKey "True"],
         check testlex "x" equals [TokId "x"],
         check testlex "true" equals [TokId "true"],
-        check testlex "print" equals [TokId "print"]
+        check testlex "print" equals [TokId "print"],
+        check testlex ".hd" equals [TokField "hd"],
+        check testlex ".tl" equals [TokField "tl"],
+        check testlex ".fst" equals [TokField "fst"],
+        check testlex ".snd" equals [TokField "snd"]
         ]
 
 export
