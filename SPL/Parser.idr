@@ -55,12 +55,14 @@ splitKeysIds : String -> SplToken
 splitKeysIds = [| eagerIf isKey TokKey TokId |]
 
 splTokMap : TokenMap SplToken
-splTokMap = [(digits, TokNum . cast),
-             (is '=', TokSpecial),
-             (spaces, const TokWhite),
-             (alpha <+> many (is '_' <|> alphaNum), splitKeysIds),
-             (choiceMap (exact . strCons '.') fields, TokField . assert_total strTail)
-             ]
+splTokMap = [
+  (digits, TokNum . cast),
+  (is '=', TokSpecial),
+  (spaces, const TokWhite),
+  (alpha <+> many (is '_' <|> alphaNum), splitKeysIds),
+  (choiceMap (exact . strCons '.') fields, TokField . assert_total strTail),
+  (oneOf "(){}[]", TokBrac . assert_total strHead)
+  ]
 
 skipWhites : List (TokenData SplToken) -> List (TokenData SplToken)
 skipWhites [] = []
