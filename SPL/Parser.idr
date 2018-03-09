@@ -28,6 +28,7 @@ data SplToken : Type where
   TokString : String -> SplToken
   TokComment : String -> SplToken
   TokWhite : SplToken
+  TokErr : String -> SplToken
 
 %runElab deriveShow `{{SPL.Parser.SplToken}}
 %runElab deriveEq `{{SPL.Parser.SplToken}}
@@ -61,7 +62,8 @@ splTokMap = [
   (spaces, const TokWhite),
   (alpha <+> many (is '_' <|> alphaNum), splitKeysIds),
   (choiceMap (exact . strCons '.') fields, TokField . assert_total strTail),
-  (oneOf "(){}[]", TokBrac . assert_total strHead)
+  (oneOf "(){}[]", TokBrac . assert_total strHead),
+  (any <+> manyUntil space any, TokErr)
   ]
 
 skipWhites : List (TokenData SplToken) -> List (TokenData SplToken)
