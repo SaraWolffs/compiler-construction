@@ -36,7 +36,10 @@ spec = [check testlex "" equals (the (List SplToken) []),
                                          TokBrac '{',TokBrac '}',
                                          TokBrac '[',TokBrac ']'],
         check testlex "[" equals [TokBrac '['],
-        check testlex "]" equals [TokBrac ']']
+        check testlex "]" equals [TokBrac ']'],
+        check testlex "= ; -> , :: []" equals [TokSpecial "=", TokSpecial ";",
+                                   TokSpecial "->", TokSpecial ",", 
+                                   TokSpecial "::", TokSpecial "[]"]
 
         ]
 
