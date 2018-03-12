@@ -18,7 +18,7 @@ sampleSnippet = concat
       "    }\n}"]
 
 strippedSnippet : String
-strippedSnippet = "facrR(n)::Int->Int{if(n<2){return 1;}else{return n*facR(n-1);}}"
+strippedSnippet = "facR(n)::Int->Int{if(n<2){return 1;}else{return n*facR(n-1);}}"
 
 spec : List TestCase
 spec = [check testlex "" equals (the (List SplToken) []),

@@ -109,6 +109,12 @@ isSemantic (TokComment _) = False
 isSemantic TokWhite = False
 isSemantic _ = True
 
+lexRaw : String -> (List (TokenData SplToken), (Int,Int,String))
+lexRaw = lex splTokMap
+
+cleanLex : List (TokenData SplToken) -> List (TokenData SplToken)
+cleanLex = filter (isSemantic . tok)
+
 export
 lexSpl : String -> (List (TokenData SplToken), (Int,Int,String))
-lexSpl = (\(ts,end)=>(skipWhites ts,end)) . (lex splTokMap) 
+lexSpl = (\(ts,end)=>(cleanLex ts,end)) . lexRaw
