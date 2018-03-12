@@ -69,6 +69,7 @@ splTokMap = [
   (oneOf "(){}[]", TokBrac . assert_total strHead),
   (oneOf ";,=", TokSpecial),
   (oneOf "+*/%<>!-:", TokOp),
+  (is '\'' <+> any <+> is '\'', TokChar . assert_total (flip strIndex 1)),
   (any <+> manyUntil space any, TokErr)
   ]
 
