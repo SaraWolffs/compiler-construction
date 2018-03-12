@@ -55,14 +55,18 @@ fork3 f a b c = [| f a b c |]
 splitKeysIds : String -> SplToken
 splitKeysIds = [| eagerIf isKey TokKey TokId |]
 
+wordOf : String -> Lexer
+wordOf = choiceMap exact . words
+
 splTokMap : TokenMap SplToken
 splTokMap = [
   (digits, TokNum . cast),
-  (is '=', TokSpecial),
   (spaces, const TokWhite),
   (alpha <+> many (is '_' <|> alphaNum), splitKeysIds),
   (choiceMap (exact . strCons '.') fields, TokField . assert_total strTail),
+  (wordOf "-> :: []", TokSpecial),
   (oneOf "(){}[]", TokBrac . assert_total strHead),
+  (oneOf ";,=", TokSpecial),
   (any <+> manyUntil space any, TokErr)
   ]
 
