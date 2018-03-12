@@ -82,6 +82,7 @@ splTokMap = [
   (alpha <+> many (is '_' <|> alphaNum), splitKeysIds),
   (digits, TokNum . cast),
   (is '.' <+> choiceMap exact fields, TokField . assert_total strTail),
+  (lineComment (exact "//") <|> blockComment (exact "/*") (exact "*/"), TokComment),
   (quote (is '\"') (escape '\\' escLex <|> any), 
             TokString . escString . stripOuter),
   -- order of next two lexers is semantically relevant for "'\\''"
