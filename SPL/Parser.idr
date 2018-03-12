@@ -64,6 +64,18 @@ stripOuter s = substr 1 (minus (length s) 2) s
 escLex : Lexer
 escLex = any
 
+escChar' : List Char -> Char
+escChar' [] = '?'
+escChar' (c::rest) = c
+
+escChar : String -> Char
+escChar = escChar' . unpack
+
+escString : String -> String
+escString = concat . map tok . fst . 
+            lex [(escape '\\' escLex, singleton . escChar . assert_total strTail),
+                (some . non . is $ '\\', id)]
+
 splTokMap : TokenMap SplToken
 splTokMap = [
   (spaces, const TokWhite),
