@@ -61,6 +61,9 @@ wordOf = choiceMap exact . words
 stripOuter : String -> String
 stripOuter s = substr 1 (minus (length s) 2) s
 
+esclex : Lexer
+esclex = any
+
 splTokMap : TokenMap SplToken
 splTokMap = [
   (spaces, const TokWhite),
@@ -68,7 +71,7 @@ splTokMap = [
   (digits, TokNum . cast),
   (is '.' <+> choiceMap exact fields, TokField . assert_total strTail),
   (is '\'' <+> any <+> is '\'', TokChar . assert_total (flip strIndex 1)),
-  (quote (is '\"') (escape '\\' any <|> any), TokString . assert_total stripOuter),
+  (quote (is '\"') (escape '\\' esclex <|> any), TokString . assert_total stripOuter),
   (wordOf "-> :: []", TokSpecial),
   (wordOf "== <= >= != && ||", TokOp),
   (oneOf "(){}[]", TokBrac . assert_total strHead),
