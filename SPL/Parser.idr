@@ -68,7 +68,7 @@ splTokMap = [
   (digits, TokNum . cast),
   (is '.' <+> choiceMap exact fields, TokField . assert_total strTail),
   (is '\'' <+> any <+> is '\'', TokChar . assert_total (flip strIndex 1)),
-  (quote (is '\"') any, TokString . assert_total stripOuter),
+  (quote (is '\"') (escape '\\' any <|> any), TokString . assert_total stripOuter),
   (wordOf "-> :: []", TokSpecial),
   (wordOf "== <= >= != && ||", TokOp),
   (oneOf "(){}[]", TokBrac . assert_total strHead),
