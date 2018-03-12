@@ -40,7 +40,7 @@ spec = [check testlex "" equals (the (List SplToken) []),
         check testlex "= ; -> , :: []" equals [TokSpecial "=", TokSpecial ";",
                                    TokSpecial "->", TokSpecial ",", 
                                    TokSpecial "::", TokSpecial "[]"],
-        check testlex operators equals (map . words) operators, 
+        check testlex operators equals (map TokOp . words) operators, 
         Nothing]
         where 
           operators = "+ * / % == <= < >= > != ! && || - :"
