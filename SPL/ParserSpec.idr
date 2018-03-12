@@ -46,6 +46,7 @@ spec = [check testlex "" equals (the (List SplToken) []),
                 [TokString "This is a string literal"],
         check testlex "\"This string contains an escaped \\\".\"" equals
                 [TokString "This string contains an escaped \"."],
+        check testlex "'\\''" equals [TokChar '\''],
         Nothing]
         where 
           operators = "+ * / % == <= < >= > != ! && || - :"
