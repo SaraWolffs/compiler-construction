@@ -1,6 +1,6 @@
-module SPL.ParserSpec
+module SPL.LexerSpec
 import TestFrame
-import SPL.Parser
+import SPL.Lexer
 
 %default total
 

@@ -1,5 +1,5 @@
 module Main
-import SPL.ParserSpec
+import SPL.LexerSpec
 main : IO ()
 main = printResults
 

@@ -1,4 +1,4 @@
-module SPL.Parser
+module SPL.Lexer
 
 import public Text.Lexer
 
@@ -14,6 +14,7 @@ import Pruviloj.Internals
 import Data.Combinators.Applicative
 %language ElabReflection
 %default total
+%access export
 
 public export
 data SplToken : Type where 
@@ -30,8 +31,8 @@ data SplToken : Type where
   TokWhite : SplToken
   TokErr : String -> SplToken
 
-%runElab deriveShow `{{SPL.Parser.SplToken}}
-%runElab deriveEq `{{SPL.Parser.SplToken}}
+%runElab deriveShow `{{SPL.Lexer.SplToken}}
+%runElab deriveEq `{{SPL.Lexer.SplToken}}
 
 reserved : List String
 reserved =
@@ -115,6 +116,5 @@ lexRaw = lex splTokMap
 cleanLex : List (TokenData SplToken) -> List (TokenData SplToken)
 cleanLex = filter (isSemantic . tok)
 
-export
 lexSpl : String -> (List (TokenData SplToken), (Int,Int,String))
 lexSpl = (\(ts,end)=>(cleanLex ts,end)) . lexRaw
