@@ -41,9 +41,16 @@ spec = [check testlex "" equals (the (List SplToken) []),
                                    TokSpecial "->", TokSpecial ",", 
                                    TokSpecial "::", TokSpecial "[]"],
         check testlex operators equals (map TokOp . words) operators, 
+        check testlex (quotechars chars) equals map TokChar chars,
         Nothing]
         where 
           operators = "+ * / % == <= < >= > != ! && || - :"
+          chars : List Char
+          chars = unpack "qwertuiopsdfgjklcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM"
+          charquote : Char -> String
+          charquote c = pack ['\'',c,'\'']
+          quotechars : List Char -> String
+          quotechars = concat . map charquote
 
 export
 printResults : IO ()
