@@ -58,6 +58,9 @@ splitKeysIds = [| eagerIf isKey TokKey TokId |]
 wordOf : String -> Lexer
 wordOf = choiceMap exact . words
 
+stripOuter : String -> String
+stripOuter s = substr 1 (minus (length s) 2) s
+
 splTokMap : TokenMap SplToken
 splTokMap = [
   (spaces, const TokWhite),
@@ -65,6 +68,7 @@ splTokMap = [
   (digits, TokNum . cast),
   (is '.' <+> choiceMap exact fields, TokField . assert_total strTail),
   (is '\'' <+> any <+> is '\'', TokChar . assert_total (flip strIndex 1)),
+  (quote (is '\"') any, TokString . assert_total stripOuter),
   (wordOf "-> :: []", TokSpecial),
   (wordOf "== <= >= != && ||", TokOp),
   (oneOf "(){}[]", TokBrac . assert_total strHead),
