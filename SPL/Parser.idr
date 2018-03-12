@@ -60,16 +60,16 @@ wordOf = choiceMap exact . words
 
 splTokMap : TokenMap SplToken
 splTokMap = [
-  (digits, TokNum . cast),
   (spaces, const TokWhite),
   (alpha <+> many (is '_' <|> alphaNum), splitKeysIds),
+  (digits, TokNum . cast),
   (is '.' <+> choiceMap exact fields, TokField . assert_total strTail),
+  (is '\'' <+> any <+> is '\'', TokChar . assert_total (flip strIndex 1)),
   (wordOf "-> :: []", TokSpecial),
   (wordOf "== <= >= != && ||", TokOp),
   (oneOf "(){}[]", TokBrac . assert_total strHead),
   (oneOf ";,=", TokSpecial),
   (oneOf "+*/%<>!-:", TokOp),
-  (is '\'' <+> any <+> is '\'', TokChar . assert_total (flip strIndex 1)),
   (any <+> manyUntil space any, TokErr)
   ]
 
