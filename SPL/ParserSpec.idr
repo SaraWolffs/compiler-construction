@@ -7,6 +7,16 @@ import SPL.Parser
 testlex : String -> List SplToken
 testlex = (map tok) . fst . lexSpl
 
+sampleSnippet : String
+sampleSnippet = concat
+    ["/*\n  Three ways to implement\n blabla\n /*nested comment*/",
+                "\n more bla\n */ \n facR ( n ) :: Int -> Int {\n",
+                "    if ( n < 2 ) {\n",
+                "        return 1;\n",
+                "    } else { //recursive case\n",
+                "        return n * facR ( n - 1 );\n",
+                "    }\n}"]
+
 spec : List TestCase
 spec = [check testlex "" equals (the (List SplToken) []),
         check testlex "5" equals [TokNum 5],
