@@ -82,9 +82,13 @@ splTokMap = [
   (alpha <+> many (is '_' <|> alphaNum), splitKeysIds),
   (digits, TokNum . cast),
   (is '.' <+> choiceMap exact fields, TokField . assert_total strTail),
-  (is '\'' <+> any <+> is '\'', TokChar . assert_total (flip strIndex 1)),
   (quote (is '\"') (escape '\\' escLex <|> any), 
-            TokString . escString . assert_total stripOuter),
+            TokString . escString . stripOuter),
+  -- order of next two lexers is semantically relevant for "'\\''"
+  (exact "'\\" <+> escLex <+> is '\'', 
+            TokChar . escChar . assert_total strTail . stripOuter),
+  (is '\'' <+> any <+> is '\'', TokChar . assert_total (flip strIndex 1)),
+  -- wordOf before oneOf is needed for maximal munch.
   (wordOf "-> :: []", TokSpecial),
   (wordOf "== <= >= != && ||", TokOp),
   (oneOf "(){}[]", TokBrac . assert_total strHead),
