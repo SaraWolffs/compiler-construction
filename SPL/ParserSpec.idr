@@ -46,7 +46,7 @@ spec = [check testlex "" equals (the (List SplToken) []),
         where 
           operators = "+ * / % == <= < >= > != ! && || - :"
           chars : List Char
-          chars = unpack "qwertuiopsdfgjklcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM"
+          chars = unpack "`1234567890~!@#$%^&*()[];qwertuioJHGFDSAZXCVBNM"
           charquote : Char -> String
           charquote c = pack ['\'',c,'\'']
           quotechars : List Char -> String
