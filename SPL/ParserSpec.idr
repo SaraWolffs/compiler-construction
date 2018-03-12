@@ -9,13 +9,16 @@ testlex = (map tok) . fst . lexSpl
 
 sampleSnippet : String
 sampleSnippet = concat
-    ["/*\n  Three ways to implement\n blabla\n /*nested comment*/",
-                "\n more bla\n */ \n facR ( n ) :: Int -> Int {\n",
-                "    if ( n < 2 ) {\n",
-                "        return 1;\n",
-                "    } else { //recursive case\n",
-                "        return n * facR ( n - 1 );\n",
-                "    }\n}"]
+    [ "/*\n  Three ways to implement\n blabla\n /*nested comment*/",
+      "\n more bla\n */ \n facR ( n ) :: Int -> Int {\n",
+      "    if ( n < 2 ) {\n",
+      "        return 1;\n",
+      "    } else { //recursive case\n",
+      "        return n * facR ( n - 1 );\n",
+      "    }\n}"]
+
+strippedSnippet : String
+strippedSnippet = "facrR(n)::Int->Int{if(n<2){return 1;}else{return n*facR(n-1);}}"
 
 spec : List TestCase
 spec = [check testlex "" equals (the (List SplToken) []),
@@ -57,6 +60,7 @@ spec = [check testlex "" equals (the (List SplToken) []),
         check testlex "\"This string contains an escaped \\\".\"" equals
                 [TokString "This string contains an escaped \"."],
         check testlex "'\\''" equals [TokChar '\''],
+        check testlex sampleSnippet equals testlex strippedSnippet,
         Nothing]
         where 
           operators = "+ * / % == <= < >= > != ! && || - :"
