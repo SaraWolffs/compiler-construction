@@ -42,6 +42,10 @@ spec = [check testlex "" equals (the (List SplToken) []),
                                    TokSpecial "::", TokSpecial "[]"],
         check testlex operators equals (map TokOp . words) operators, 
         check testlex (quotechars chars) equals map TokChar chars,
+        check testlex "\"This is a string literal\"" equals 
+                [TokString "This is a string literal"],
+        check testlex "\"This string contains an escaped \\\".\"" equals
+                [TokString "This string contains an escaped \"."],
         Nothing]
         where 
           operators = "+ * / % == <= < >= > != ! && || - :"
