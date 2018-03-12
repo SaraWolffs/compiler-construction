@@ -65,8 +65,10 @@ splTokMap = [
   (alpha <+> many (is '_' <|> alphaNum), splitKeysIds),
   (choiceMap (exact . strCons '.') fields, TokField . assert_total strTail),
   (wordOf "-> :: []", TokSpecial),
+  (wordOf "== <= >= != && ||", TokOp),
   (oneOf "(){}[]", TokBrac . assert_total strHead),
   (oneOf ";,=", TokSpecial),
+  (oneOf "+*/%<>!-:", TokOp),
   (any <+> manyUntil space any, TokErr)
   ]
 

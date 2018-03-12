@@ -39,9 +39,11 @@ spec = [check testlex "" equals (the (List SplToken) []),
         check testlex "]" equals [TokBrac ']'],
         check testlex "= ; -> , :: []" equals [TokSpecial "=", TokSpecial ";",
                                    TokSpecial "->", TokSpecial ",", 
-                                   TokSpecial "::", TokSpecial "[]"]
-
-        ]
+                                   TokSpecial "::", TokSpecial "[]"],
+        check testlex operators equals (map . words) operators, 
+        Nothing]
+        where 
+          operators = "+ * / % == <= < >= > != ! && || - :"
 
 export
 printResults : IO ()
