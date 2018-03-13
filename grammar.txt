@@ -92,8 +92,9 @@ Exp atomlevel   = Lit | Parens (Exp toplevel) | Pair (Exp toplevel)
                 | Key 'False' | Key 'True' | Key '[]'
                 | FunCall
 Exp n = UnOp n <+> Exp n
-Exp (n+1) = Exp n <+> ROp (n+1) <+> Exp (n+1)
-Exp (n+1) = CHAINL(Exp (n+1) <+> LOp (n+1) <+> Exp n)
+Exp (n+1) = Exp n <+> ROp n <+> Exp (n+1)
+// hint: liftA3 ROpExp <$> parseExp n <*> parseROp n <*> parseExp (S n)
+Exp (n+1) = CHAINL(Exp (n+1) <+> LOp n <+> Exp n)
 Exp (n+k) = Exp n
 
 VarDef = (Key 'var' | Type) <+> Id <+> Special '=' <+> Exp toplevel <+> Special ';'
