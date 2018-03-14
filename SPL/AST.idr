@@ -58,6 +58,7 @@ data UnOp : Nat -> {nTy:Type} -> Type where
 
 
 data LitTy = Num | Str | Chr | LBool
+
 ITyFromLitTy : LitTy -> Type
 ITyFromLitTy Num = Nat
 ITyFromLitTy Str = String
@@ -79,3 +80,12 @@ data Expr : Nat -> {nTy:Type} -> Type where
               Expr (S n + k) {nTy}
   ROpExpr   : (l:Expr n {nTy}) -> (op:ROp n {nTy}) -> (r:Expr (S n) {nTy}) ->
               Expr (S n + k) {nTy}
+
+data TyLit : SInt | SBool | SChar | SStr
+
+-- Declared Type
+data DeclTy  : {nTy:Type} -> Type where
+  BasicType : (tname:TyLit) -> {s:nTy} -> DeclTy {nTy}
+  ListType  : (el:DeclTy {nTy}) -> {s:nTy} -> DeclTy {nTy}
+  TypePair  : (l:DeclTy {nTy}) -> (r:DeclTy {nTy}) -> {s:nTy} -> DeclTy {nTy}
+  TypeId    : (tid:Id {nTy}) -> {s:nTy} -> DeclTy {nTy}
