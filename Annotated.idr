@@ -15,7 +15,6 @@ Functor (Annotated noteTy) where
   map g (Annotate note x) = Annotate note (g x)
   map g (NotePure x) = NotePure (g x)
   map g (NoteApp f x) = NoteApp (map (g .) f) x
-  
 
 Applicative (Annotated noteTy) where
   pure = NotePure 
