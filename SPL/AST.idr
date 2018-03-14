@@ -81,7 +81,16 @@ data Expr : Nat -> {nTy:Type} -> Type where
   ROpExpr   : (l:Expr n {nTy}) -> (op:ROp n {nTy}) -> (r:Expr (S n) {nTy}) ->
               Expr (S n + k) {nTy}
 
-data TyLit : SInt | SBool | SChar | SStr
+data Stmt : {nTy:Type} -> Type where
+  IfElse    : (cond:Expr TopLevel {nTy}) -> Stmt {nTy} -> Maybe (Stmt {nTy}) -> 
+              {s:nTy} -> Stmt {nTy}
+  While     : (cond:Expr TopLevel {nTy}) -> Stmt {nTy} -> {s:nTy} -> Stmt {nTy}
+  Assign    : (vid:Id {nTy}) -> (field:Field {nTy}) -> (rval:Expr TopLevel {nTy}) -> 
+              {s:nTy} -> Stmt {nTy}
+  ExprStmt  : Expr TopLevel {nTy} -> {s:nTy} -> Stmt {nTy}
+  RetStmt   : Expr TopLevel {nTy} -> {s:nTy} -> Stmt {nTy}
+
+data TyLit = SInt | SBool | SChar | SStr
 
 -- Declared Type
 data DeclTy  : {nTy:Type} -> Type where
