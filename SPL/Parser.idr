@@ -2,6 +2,7 @@ module SPL.Parser
 
 import public Text.Parser
 
+{-
 -- Derivation libraries
 import Derive.Show
 import Derive.Eq
@@ -13,46 +14,64 @@ import Pruviloj.Internals.TyConInfo
 import Pruviloj.Internals
 import Data.Combinators.Applicative
 %language ElabReflection
+-}
 
 %default total
 %access export
 
-Atomlevel : Nat
-Atomlevel = 0
-Neglevel : Nat
-Neglevel = 2
-Multlevel : Nat
-Multlevel = 4
-Pluslevel : Nat
-Pluslevel = 6
-Ordlevel : Nat
-Ordlevel = 8
-Eqlevel : Nat
-Eqlevel = 9
-Notlevel : Nat
-Notlevel = 10
-Boollevel : Nat
-Boollevel = 12
-Conslevel : Nat
-Conslevel = 14
-Tuplevel : Nat
-Tuplevel = 16
-Toplevel : Nat
-Toplevel = 18
+AtomLevel : Nat
+AtomLevel = 0
+NegLevel : Nat
+NegLevel = 2
+MultLevel : Nat
+MultLevel = 4
+PlusLevel : Nat
+PlusLevel = 6
+OrdLevel : Nat
+OrdLevel = 8
+EqLevel : Nat
+EqLevel = 9
+NotLevel : Nat
+NotLevel = 10
+BoolLevel : Nat
+BoolLevel = 12
+ConsLevel : Nat
+ConsLevel = 14
+TupLevel : Nat
+TupLevel = 16
+TopLevel : Nat
+TopLevel = 18
 
-data LOp : Nat -> {nTy:Type} -> Type where
-  Mult  : {s:nTy} -> LOp Multlevel {nTy}
-  Div   : {s:nTy} -> LOp Multlevel {nTy}
-  Mod   : {s:nTy} -> LOp Multlevel {nTy}
-  Plus  : {s:nTy} -> LOp Pluslevel {nTy}
-  Minus : {s:nTy} -> LOp Pluslevel {nTy}
-  Lt    : {s:nTy} -> LOp Ordlevel  {nTy}
-  Gt    : {s:nTy} -> LOp Ordlevel  {nTy}
-  Leq   : {s:nTy} -> LOp Ordlevel  {nTy}
-  Geq   : {s:nTy} -> LOp Ordlevel  {nTy}
-  Eq    : {s:nTy} -> LOp Eqlevel   {nTy}
-  Neq   : {s:nTy} -> LOp Eqlevel   {nTy}
-  And   : {s:nTy} -> LOp Boollevel {nTy}
-  Or    : {s:nTy} -> LOp Boollevel {nTy}
+data LOp  : Nat -> {nTy:Type} -> Type where
+  Mult  : {s:nTy} -> LOp  MultLevel {nTy}
+  Div   : {s:nTy} -> LOp  MultLevel {nTy}
+  Mod   : {s:nTy} -> LOp  MultLevel {nTy}
+  Plus  : {s:nTy} -> LOp  PlusLevel {nTy}
+  Minus : {s:nTy} -> LOp  PlusLevel {nTy}
+  Lt    : {s:nTy} -> LOp  OrdLevel  {nTy}
+  Gt    : {s:nTy} -> LOp  OrdLevel  {nTy}
+  Leq   : {s:nTy} -> LOp  OrdLevel  {nTy}
+  Geq   : {s:nTy} -> LOp  OrdLevel  {nTy}
+  Eq    : {s:nTy} -> LOp  EqLevel   {nTy}
+  Neq   : {s:nTy} -> LOp  EqLevel   {nTy}
+  And   : {s:nTy} -> LOp  BoolLevel {nTy}
+  Or    : {s:nTy} -> LOp  BoolLevel {nTy}
+
+data ROp  : Nat -> {nTy:Type} -> Type where
+  Cons  : {s:nTy} -> ROp  ConsLevel {nTy}
+
+data UnOp : Nat -> {nTy:Type} -> Type where
+  Neg   : {s:nTy} -> UnOp NegLevel {nTy}
+  Not   : {s:nTy} -> UnOp NotLevel {nTy}
 
 
+
+data LitTy = Num | Str | Chr
+
+ITyFromLitTy : LitTy -> Type
+ITyFromLitTy Num = Nat
+ITyFromLitTy Str = String
+ITyFromLitTy Chr = Char
+
+data Expr : Nat -> {nTy:Type} -> Type where
+  Lit : {t:LitTy} -> ITyFromLitTy t -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
