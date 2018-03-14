@@ -1,7 +1,5 @@
 module SPL.AST
 
-import public Text.AST
-
 import Data.Combinators.Applicative
 
 %default total
@@ -30,6 +28,9 @@ TupLevel = 16
 TopLevel : Nat
 TopLevel = 18
 
+data Id = MkId String
+data Field = MkField (List String)
+
 data LOp  : Nat -> {nTy:Type} -> Type where
   Mult  : {s:nTy} -> LOp  MultLevel {nTy}
   Div   : {s:nTy} -> LOp  MultLevel {nTy}
@@ -53,13 +54,19 @@ data UnOp : Nat -> {nTy:Type} -> Type where
   Not   : {s:nTy} -> UnOp NotLevel {nTy}
 
 
-
-data LitTy = Num | Str | Chr
-
+data LitTy = Num | Str | Chr | Bol
 ITyFromLitTy : LitTy -> Type
 ITyFromLitTy Num = Nat
 ITyFromLitTy Str = String
 ITyFromLitTy Chr = Char
+ITyFromLitTy Bol = Bool
+
 
 data Expr : Nat -> {nTy:Type} -> Type where
-  Lit : {t:LitTy} -> ITyFromLitTy t -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
+  Lit       : {t:LitTy} -> (val:ITyFromLitTy t) -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
+  Nil       : {s:nTy} -> Expr (AtomLevel+k) {nTy}
+  Var       : (vid:Id) -> (field:Field) -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
+  ParenExpr : (wrapped:Expr TopLevel {nTy}) -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
+  PairExpr  : (left:Expr TopLevel {nTy}) -> (right:Expr TopLevel {nTy}) -> 
+                                                    {s:nTy} -> Expr (AtomLevel+k) {nTy}
+  FunCall   : (fid:Id) -> (args:List (Expr TopLevel)) -> {s:nTy} -> Expr (AtomLevel+k)  {nTy}
