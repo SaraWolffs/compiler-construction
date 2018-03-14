@@ -2,19 +2,7 @@ module SPL.Parser
 
 import public Text.Parser
 
-{-
--- Derivation libraries
-import Derive.Show
-import Derive.Eq
-import Data.Vect
-import Language.Reflection.Elab
-import Language.Reflection.Utils
-import Pruviloj.Core
-import Pruviloj.Internals.TyConInfo
-import Pruviloj.Internals
 import Data.Combinators.Applicative
-%language ElabReflection
--}
 
 %default total
 %access export
