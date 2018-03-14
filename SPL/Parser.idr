@@ -26,13 +26,13 @@ data LocNote : Type where
 loc : RichTok -> Loc
 loc = MkLoc <$> cast . line <*> cast . col
 
-Consume : Type -> Type
-Consume = Grammar RichTok True
+Consume : ((nTy:Type) -> Type) -> Type
+Consume = Grammar RichTok True  . (<| LocNote)
 
-Allow : Type -> Type
-Allow = Grammar RichTok False 
+Allow   : ((nTy:Type) -> Type) -> Type
+Allow   = Grammar RichTok False . (<| LocNote)
 
-ident : Consume (Id {nTy=LocNote})
+ident : Consume Id 
 ident = terminal $ \x=>case tok x of 
-                            TokId s => Just (MkId s {s=At (loc x)})
+                            TokId s => Just (MkId s (At (loc x)))
                             _ => Nothing
