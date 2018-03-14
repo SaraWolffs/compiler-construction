@@ -1,6 +1,6 @@
-module SPL.Parser
+module SPL.AST
 
-import public Text.Parser
+import public Text.AST
 
 import Data.Combinators.Applicative
 
