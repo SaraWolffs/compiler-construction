@@ -19,12 +19,23 @@ record Loc where
   col : Nat
 
 data LocNote : Type where
-  Virtual   : (near:Loc) -> LocNote
-  At        : (loc:Loc) -> LocNote
-  Spanning  : (begin:Loc) -> (end:Loc) -> LocNote
+  At   : (loc:Loc) -> LocNote
+  Span : (begin:Loc) -> (end:Loc) -> LocNote
 
 loc : RichTok -> Loc
 loc = MkLoc <$> cast . line <*> cast . col
+
+at : RichTok -> LocNote
+at = At . loc
+
+span : (first:LocNote) -> (last:LocNote) -> LocNote
+span (At begin) (At end) = Span begin end
+span (At begin) (Span _ end) = Span begin end
+span (Span begin _) (At end) = Span begin end
+span (Span begin _) (Span _ end) = Span begin end
+
+Semigroup LocNote where
+  (<+>) = span
 
 Consume : ((nTy:Type) -> Type) -> Type
 Consume = Grammar RichTok True  . (<| LocNote)
@@ -34,5 +45,8 @@ Allow   = Grammar RichTok False . (<| LocNote)
 
 ident : Consume Id 
 ident = terminal $ \x=>case tok x of 
-                            TokId s => Just (MkId s (At (loc x)))
+                            TokId s => Just (MkId s (at x))
                             _ => Nothing
+
+require : (req:SplToken) -> Consume id
+
