@@ -92,10 +92,6 @@ Exp (n+1) = Exp n <+> ROp n <+> Exp (n+1)
 Exp (n+1) = CHAINL(Exp (n+1) <+> LOp n <+> Exp n)
 Exp (n+k) = Exp n
 
-BasicType = Key 'Int' | Key 'Bool' | Key 'Char'
-Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']' | Id
-
-VarDef = (Key 'var' | Type) <+> Id <+> Special '=' <+> Exp toplevel <+> Special ';'
 
 //We're changing the language here to be slightly more C-like. Control
 // structures can affect any statement, and {Stmt*} is a (compound) statement.
@@ -104,6 +100,11 @@ Stmt    = Key 'if' <+> Parens (Exp toplevel) <+> Stmt <+> [Key 'else' <+> Stmt]
         | Id <+> Field <+> Special '=' <+> Exp toplevel <+> Special ';'
         | Funcall <+> Special ';'
         | Key 'return' <+> Exp toplevel <+> Special ';'
+
+BasicType = Key 'Int' | Key 'Bool' | Key 'Char'
+Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']' | Id
+
+VarDef = (Key 'var' | Type) <+> Id <+> Special '=' <+> Exp toplevel <+> Special ';'
 
 RetType = Type | Key 'Void'
 FType = Type* <+> Special '->' <+> RetType 
