@@ -84,7 +84,7 @@ FunCall = Id <+> Parens ([Args])
 #compound(try all matching alternatives, in order of appearance)
 Exp atomlevel   = Lit | Parens (Exp toplevel) | Pair (Exp toplevel)
                 | Id <+> Field
-                | Key 'False' | Key 'True' | Key '[]'
+                | Key 'False' | Key 'True' | Special '[]'
                 | FunCall
 Exp n = UnOp n <+> Exp n
 Exp (n+1) = Exp n <+> ROp n <+> Exp (n+1)
