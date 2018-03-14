@@ -28,8 +28,11 @@ TupLevel = 16
 TopLevel : Nat
 TopLevel = 18
 
-data Id = MkId String
-data Field = MkField (List String)
+data Id : {nTy:Type} -> Type where
+  MkId : String -> {s:nTy} -> Id {nTy}
+
+data Field : {nTy:Type} -> Type where
+  MkField : (List String) -> {s:nTy} -> Field {nTy}
 
 data LOp  : Nat -> {nTy:Type} -> Type where
   Mult  : {s:nTy} -> LOp  MultLevel {nTy}
@@ -54,19 +57,25 @@ data UnOp : Nat -> {nTy:Type} -> Type where
   Not   : {s:nTy} -> UnOp NotLevel {nTy}
 
 
-data LitTy = Num | Str | Chr | Bol
+data LitTy = Num | Str | Chr | LBool
 ITyFromLitTy : LitTy -> Type
 ITyFromLitTy Num = Nat
 ITyFromLitTy Str = String
 ITyFromLitTy Chr = Char
-ITyFromLitTy Bol = Bool
+ITyFromLitTy LBool = Bool
 
 
 data Expr : Nat -> {nTy:Type} -> Type where
   Lit       : {t:LitTy} -> (val:ITyFromLitTy t) -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
   Nil       : {s:nTy} -> Expr (AtomLevel+k) {nTy}
-  Var       : (vid:Id) -> (field:Field) -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
+  Var       : (vid:Id {nTy}) -> (field:Field {nTy}) -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
   ParenExpr : (wrapped:Expr TopLevel {nTy}) -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
   PairExpr  : (left:Expr TopLevel {nTy}) -> (right:Expr TopLevel {nTy}) -> 
-                                                    {s:nTy} -> Expr (AtomLevel+k) {nTy}
-  FunCall   : (fid:Id) -> (args:List (Expr TopLevel)) -> {s:nTy} -> Expr (AtomLevel+k)  {nTy}
+              {s:nTy} -> Expr (AtomLevel+k) {nTy}
+  FunCall   : (fid:Id {nTy}) -> (args:List (Expr TopLevel {nTy})) -> 
+              {s:nTy} -> Expr (AtomLevel+k) {nTy}
+  UnOpExpr  : (op:UnOp n {nTy}) -> (e:Expr n {nTy}) -> {s:nTy} -> Expr (n+k) {nTy}
+  LOpExpr   : (l:Expr (S n) {nTy}) -> (op:LOp n {nTy}) -> (r:Expr n {nTy}) ->
+              Expr (S n + k) {nTy}
+  ROpExpr   : (l:Expr n {nTy}) -> (op:ROp n {nTy}) -> (r:Expr (S n) {nTy}) ->
+              Expr (S n + k) {nTy}
