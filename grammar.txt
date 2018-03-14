@@ -55,22 +55,8 @@ Field = Lexer.field*
 Special s = Lexer.special matching s
 Key k = Lexer.key matching k
 Brac t = Lexer.brac matching t
-Parens p = Brac '(' <+> p <+> Brac ')' 
-Braced p = Brac '{' <+> p <+> Brac '}'
-Pair p = Parens (p <+> Special ',' <+> p)
-
-BasicType = Key 'Int' | Key 'Bool' | Key 'Char'
-Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']' | Id
-
-RetType = Type | 'Void'
-FType = Type* <+> Special '->' <+> RetType 
-Params = Id <+> [Special ',' <+> Params]         // Renamed from FArgs
-Args   = Exp toplevel <+> [Special ',' <+> Args] // Renamed from ActArgs
-FunDecl = Id <+> Parens ([Params]) <+> [Special '::' <+> FType] 
-FunCall = Id <+> Parens ([Args])
-
-
 Lit = Lexer.number | Lexer.char | Lexer.string
+Op o = Lexer.operator matching o
 
 #compound(unambiguous)
 LOp multlevel = Op '*' | Op '/' | Op ''%'
@@ -84,6 +70,22 @@ ROp conslevel = Op ':'
 #compound(unambiguous)
 UnOp neglevel = Op '-'
 UnOp notlevel = Op '!'
+
+Parens p = Brac '(' <+> p <+> Brac ')' 
+Braced p = Brac '{' <+> p <+> Brac '}'
+Pair p = Parens (p <+> Special ',' <+> p)
+
+BasicType = Key 'Int' | Key 'Bool' | Key 'Char'
+Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']' | Id
+
+RetType = Type | Key 'Void'
+FType = Type* <+> Special '->' <+> RetType 
+Params = Id <+> [Special ',' <+> Params]         // Renamed from FArgs
+Args   = Exp toplevel <+> [Special ',' <+> Args] // Renamed from ActArgs
+FunDecl = Id <+> Parens ([Params]) <+> [Special '::' <+> FType] 
+FunCall = Id <+> Parens ([Args])
+
+
 
 #SPECIAL: CHAINL(..), parse as contex-sensitive by monad-only chainl combinator
 #compound(try all matching alternatives, in order of appearance)
