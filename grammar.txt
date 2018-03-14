@@ -75,14 +75,7 @@ Parens p = Brac '(' <+> p <+> Brac ')'
 Braced p = Brac '{' <+> p <+> Brac '}'
 Pair p = Parens (p <+> Special ',' <+> p)
 
-BasicType = Key 'Int' | Key 'Bool' | Key 'Char'
-Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']' | Id
-
-RetType = Type | Key 'Void'
-FType = Type* <+> Special '->' <+> RetType 
-Params = Id <+> [Special ',' <+> Params]         // Renamed from FArgs
 Args   = Exp toplevel <+> [Special ',' <+> Args] // Renamed from ActArgs
-FunDecl = Id <+> Parens ([Params]) <+> [Special '::' <+> FType] 
 FunCall = Id <+> Parens ([Args])
 
 
@@ -99,6 +92,9 @@ Exp (n+1) = Exp n <+> ROp n <+> Exp (n+1)
 Exp (n+1) = CHAINL(Exp (n+1) <+> LOp n <+> Exp n)
 Exp (n+k) = Exp n
 
+BasicType = Key 'Int' | Key 'Bool' | Key 'Char'
+Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']' | Id
+
 VarDef = (Key 'var' | Type) <+> Id <+> Special '=' <+> Exp toplevel <+> Special ';'
 
 //We're changing the language here to be slightly more C-like. Control
@@ -109,6 +105,10 @@ Stmt    = Key 'if' <+> Parens (Exp toplevel) <+> Stmt <+> [Key 'else' <+> Stmt]
         | Funcall <+> Special ';'
         | Key 'return' <+> Exp toplevel <+> Special ';'
 
+RetType = Type | Key 'Void'
+FType = Type* <+> Special '->' <+> RetType 
+Params = Id <+> [Special ',' <+> Params]         // Renamed from FArgs
+FunDecl = Id <+> Parens ([Params]) <+> [Special '::' <+> FType] 
 
 FunBod = Braced (VarDef* <+> Stmt+)
 FunDef = FunDecl <+> FunBod
