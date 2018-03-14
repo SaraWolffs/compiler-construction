@@ -1,9 +1,7 @@
 module SPL.AST
 
-import Data.Combinators.Applicative
-
 %default total
-%access export
+%access public export
 
 AtomLevel : Nat
 AtomLevel = 0
@@ -65,7 +63,6 @@ ITyFromLitTy Str = String
 ITyFromLitTy Chr = Char
 ITyFromLitTy LBool = Bool
 
-
 data Expr : Nat -> {nTy:Type} -> Type where
   Lit       : {t:LitTy} -> (val:ITyFromLitTy t) -> {s:nTy} -> Expr (AtomLevel+k) {nTy}
   Nil       : {s:nTy} -> Expr (AtomLevel+k) {nTy}
@@ -87,14 +84,46 @@ data Stmt : {nTy:Type} -> Type where
   While     : (cond:Expr TopLevel {nTy}) -> Stmt {nTy} -> {s:nTy} -> Stmt {nTy}
   Assign    : (vid:Id {nTy}) -> (field:Field {nTy}) -> (rval:Expr TopLevel {nTy}) -> 
               {s:nTy} -> Stmt {nTy}
-  ExprStmt  : Expr TopLevel {nTy} -> {s:nTy} -> Stmt {nTy}
-  RetStmt   : Expr TopLevel {nTy} -> {s:nTy} -> Stmt {nTy}
+  ExprStmt  : (e:Expr TopLevel {nTy}) -> {s:nTy} -> Stmt {nTy}
+  Return    : (val:Maybe (Expr TopLevel {nTy})) -> {s:nTy} -> Stmt {nTy}
 
 data TyLit = SInt | SBool | SChar | SStr
 
 -- Declared Type
-data DeclTy  : {nTy:Type} -> Type where
+data DeclTy : {nTy:Type} -> Type where
   BasicType : (tname:TyLit) -> {s:nTy} -> DeclTy {nTy}
   ListType  : (el:DeclTy {nTy}) -> {s:nTy} -> DeclTy {nTy}
   TypePair  : (l:DeclTy {nTy}) -> (r:DeclTy {nTy}) -> {s:nTy} -> DeclTy {nTy}
   TypeId    : (tid:Id {nTy}) -> {s:nTy} -> DeclTy {nTy}
+
+data RetTy : {nTy:Type} -> Type where
+  ValType   : (t:DeclTy {nTy}) -> RetTy {nTy}
+  VoidType  : {s:nTy} -> RetTy {nTy}
+
+
+infixr 0 ~>
+
+data FuncTy : {nTy:Type} -> Type where
+  (~>) : List (DeclTy {nTy}) -> RetTy {nTy} -> {s:nTy} -> FuncTy {nTy}
+
+data FuncDecl : {nTy:Type} -> Type where
+  MkFuncDecl : (fid:Id {nTy}) -> (params:List (Id {nTy})) -> (t:Maybe (FuncTy {nTy})) ->
+               {s:nTy} -> FuncDecl
+  
+
+data VarDef : {nTy:Type} -> Type where
+  NewVar : (t:Maybe (DeclTy {nTy})) -> (vid:Id {nTy}) -> (rval:Expr TopLevel {nTy}) -> 
+              {s:nTy} -> VarDef {nTy}
+
+data FuncBody : {nTy:Type} -> Type where
+  MkFuncBody : (locals:List (VarDef {nTy})) -> (stmts:List (Stmt {nTy})) ->
+               {s:nTy} -> FuncBody {nTy}
+
+data FuncDef : {nTy:Type} -> Type where
+  NewFunc : (header:FuncDecl {nTy}) -> (body:FuncDecl {nTy}) -> {s:nTy} -> FuncDef {nTy}
+
+SplDef : {nTy:Type} -> Type
+SplDef {nTy} = Either (VarDef {nTy}) (FuncDef {nTy})
+
+Spl : {nTy:Type} -> Type
+Spl {nTy} = List (SplDef {nTy})
