@@ -29,8 +29,11 @@ TopLevel = 18
 data Id : (nTy:Type) -> Type where
   MkId : (name:String) -> (s:nTy) -> Id nTy
 
+data Selector : (nTy:Type) -> Type where
+  MkSel : (sel:String) -> (s:nTy) -> Selector nTy
+
 data Field : (nTy:Type) -> Type where
-  MkField : (selectors:(List String)) -> (s:nTy) -> Field nTy
+  MkField : (sels:(List (Selector nTy))) -> Field nTy
 
 data LOp  : Nat -> (nTy:Type) -> Type where
   Mult  : (s:nTy) -> LOp  MultLevel nTy
