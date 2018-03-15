@@ -58,13 +58,13 @@ data UnOp : Nat -> (nTy:Type) -> Type where
   Not   : (s:nTy) -> UnOp NotLevel nTy
 
 
-data LitTy = Num | Str | Chr | LBool
+data LitTy = Num | Str | Chr | Bol
 
 ITyFromLitTy : LitTy -> Type
 ITyFromLitTy Num = Nat
 ITyFromLitTy Str = String
 ITyFromLitTy Chr = Char
-ITyFromLitTy LBool = Bool
+ITyFromLitTy Bol = Bool
 
 data Expr : Nat -> (nTy:Type) -> Type where
   Lit       : {t:LitTy} -> (val:ITyFromLitTy t) -> (s:nTy) -> Expr (AtomLevel+k) nTy
