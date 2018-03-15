@@ -79,11 +79,15 @@ lit = terminal $ \x=>case tok x of
                           _ => Nothing
 
 
+between : (open:Structure) -> (close:Structure) -> 
+          (build:a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
+between open close build p = [| (\l,m,r=> build m (span l r)) open p close |]
+
 parens : (build:a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
-parens build p = [| (\l,m,r=> build m (span l r)) (brac '(') p (brac ')') |]
+parens = between (brac '(') (brac ')')
 
 braced : (build:a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
-braced build p = [| (\l,m,r=> build m (span l r)) (brac '{') p (brac '}') |]
+braced = between (brac '{') (brac '}')
 
 pair : (build:a -> a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
 pair build p = parens (uncurry build) [| (\l,_,r=>(l,r)) p (special ",") p |]
