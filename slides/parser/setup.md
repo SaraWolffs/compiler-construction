@@ -42,4 +42,27 @@
 
 #AST
  - Multi-type AST, typechecked for correct parsing.
- - 
+ - Every non-terminal is a datatype (as are some terminals).
+ - Every production rule is a constructor.
+ - The grammar has been inlined slightly in translation.
+ - We want annotations! Now, location, later, types.
+ - Every constructor has a final "note" argument.
+ - Reuse: polymorphic in noteType.
+
+#Expression levels
+ - Let's see what dependent types can do.
+ Snippet:
+    LOpExpr, Id, ParenExpr, UnOpExpr 
+ - `k` is "slack".
+ - Note levels for each constructor.
+
+#Parsing left-recursion
+ - Left recursion as context-free is hard...
+ - Parser combinators are context-sensitive. 
+ - Parsing weaker grammars using stronger ones is easy.
+ - Parse left side first, bind as context parsing rest.
+ - `chainl` combinator does this, using `>>=`.
+ - Unfortunatly, it's not in Text.Parser.
+ - However, `>>=` is, so we'll be able to build it.
+
+#Questions
