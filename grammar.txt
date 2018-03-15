@@ -100,6 +100,7 @@ Stmt    = Key 'if' <+> Parens (Exp toplevel) <+> Stmt <+> [Key 'else' <+> Stmt]
         | Id <+> Field <+> Special '=' <+> Exp toplevel <+> Special ';'
         | Funcall <+> Special ';'
         | Key 'return' <+> [Exp toplevel] <+> Special ';'
+        | Braced (Stmt*)
 
 BasicType = Key 'Int' | Key 'Bool' | Key 'Char'
 Type = BasicType | Pair Type | Brac '[' <+> Type <+> Brac ']' | Id

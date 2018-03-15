@@ -89,6 +89,7 @@ data Stmt : (nTy:Type) -> Type where
               (s:nTy) -> Stmt nTy
   ExprStmt  : (e:Expr TopLevel nTy) -> (s:nTy) -> Stmt nTy
   Return    : (val:Maybe (Expr TopLevel nTy)) -> (s:nTy) -> Stmt nTy
+  Compound  : (stmts:List (Stmt nTy)) -> (s:nTy) -> Stmt nTy
 
 data TyLit = SInt | SBool | SChar | SStr
 
