@@ -1,0 +1,257 @@
+\documentclass
+  [ department=icis
+  , notes={show notes}
+  , slidesperpage=1
+  , nohandout
+  , official=true
+  ] {beamerruhuisstijl}
+
+% Use Times Roman, with corresponding math font
+\usepackage{mathptmx}
+\usefonttheme{serif}
+%Add Idris bindings
+\usepackage{fancyvrb}
+%\usepackage[usenames]{xcolor}
+\newcommand{\IdrisData}[1]{\textbf{\textcolor{red}{#1}}}
+\newcommand{\IdrisType}[1]{\textbf{\textcolor{blue}{#1}}}
+\newcommand{\IdrisBound}[1]{\textbf{\textcolor{purple}{#1}}}
+\newcommand{\IdrisFunction}[1]{\textbf{\textcolor[RGB]{30,150,10}{#1}}}
+\newcommand{\IdrisKeyword}[1]{{\underline{#1}}}
+\newcommand{\IdrisImplicit}[1]{{\itshape \IdrisBound{#1}}}
+
+\newcommand{\frameAndSection}[1]{\section{#1}\begin{frame}{#1}}
+\newcommand{\fframeAndSection}[1]{\section{#1}\begin{frame}[fragile]{#1}}
+
+\usepackage[english]{babel}
+
+%\usepackage{tikz}
+%\usetikzlibrary{positioning}
+
+% needs debian package texlive-math-extra
+%\usepackage{stmaryrd} % for \llbracket, \rrbracket (scott brackets)
+
+% to get rid of the error "No room for a new \dimen" caused by some packages
+\usepackage{etex}
+\usepackage[retainorgcmds]{IEEEtrantools}
+%\usepackage{bussproofs}
+
+\usepackage{listings}
+\usepackage{courier}
+\lstset{language=C,basicstyle=\ttfamily}
+
+%% Remove the navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+
+%\def\redb{\rightarrow_{\beta}}
+%\def\yields{\vdash}
+%\def\oftype{{:}}
+%\def\reddb{\twoheadrightarrow_{\beta}}
+%\newcommand{\SL}{\textsf{SL}}
+%\def\FV#1{\textsf{FV}(#1)}
+%\def\TV#1{\textsf{TV}(#1)}
+%\def\TFA#1#2{\forall{#1}.{#2}}
+
+%\def\ite#1#2#3{\kw{if}~{#1}~\kw{then}~{#2}~\kw{else}~{#3}}
+%\def\letexpr#1#2#3{\kw{let}~{#1}={#2}~\kw{in}~{#3}}
+
+%\renewcommand{\leq}{\leqslant}
+%\newcommand{\kw}[1]{\textbf{\small{#1}}}
+
+
+
+% Adjust formatting of itemize lists according to some recommendations I once
+% found somewhere on the internet.
+% - no bullets, no indentation
+% - more spacing
+% See section 12.1 of the beamer user guide.
+
+% removes the bullets of itemize items of all depths
+\setbeamertemplate{itemize items}{}
+
+% spacing between items
+\newcommand{\myitemsep}{4pt}%
+
+% beamerruhuisstijl redefines itemize environments (and fucks it up IMHO)
+% This redefines itemize and adjusts spacing
+\makeatletter
+\renewcommand{\itemize}[1][]{%
+  \beamer@ifempty{#1}{}{\def\beamer@defaultospec{#1}}%
+  \ifnum \@itemdepth >2\relax\@toodeep\else
+    \advance\@itemdepth\@ne
+    \beamer@computepref\@itemdepth% sets \beameritemnestingprefix
+    \usebeamerfont{itemize/enumerate \beameritemnestingprefix body}%
+    \usebeamercolor[fg]{itemize/enumerate \beameritemnestingprefix body}%
+    \usebeamertemplate{itemize/enumerate \beameritemnestingprefix body begin}%
+    % removes indentation of top-level lists
+    \setlength{\leftmargini}{0pt}% this has to go here for some reason
+    \list
+      {\usebeamertemplate{itemize \beameritemnestingprefix item}}
+      {\def\makelabel##1{%
+          {%
+            \hss\llap{{%
+                \usebeamerfont*{itemize \beameritemnestingprefix item}%
+                \usebeamercolor[fg]{itemize \beameritemnestingprefix item}##1}}%
+          }%
+        }%
+        % increases spacing between list items
+        % these have to go here for some reason
+        \setlength{\itemsep}{\myitemsep}%
+        \setlength{\partopsep}{-\myitemsep}%
+        \setlength{\topsep}{\myitemsep}%
+      }
+  \fi%
+  \beamer@cramped%
+  \raggedright%
+  \beamer@firstlineitemizeunskip%
+}
+\makeatother
+
+\begin{document}
+
+
+\title{Parsing in Idris}
+\subtitle{A dependently typed functional language}
+\author{Sal~Wolffs}
+\date{\today}
+
+\begin{frame}
+  % suppress overfull hbox error message for the title page
+  \hfuzz=\maxdimen
+  \titlepage
+  \maketitle
+\end{frame}
+
+\frameAndSection{Parsing in Idris}
+  A dependently typed functional language
+\end{frame}
+
+
+\frameAndSection{Idris}
+\onslide<+->
+\begin{itemize}
+    \onslide<+->\item Focus: general-purpose programming.
+    \onslide<+->\item Haskell-like.
+    \onslide<+->\item Type system: $\lambda\Pi 2$ w/ full polymorphism.
+    \onslide<+->\item Additionally has ad-hoc polymorphism/overloading.
+    \onslide<+->\item Optional totality checking.
+    \onslide<+->\item Evaluation order: default strict.
+    \onslide<+->\item Undecidable: totality, type inference.
+    \onslide<+->\item Standard libraries under active development.
+\end{itemize}
+\end{frame}
+
+\frameAndSection{Technique}
+\onslide<+->
+\begin{itemize} 
+    \onslide<+->\item Two-phase: lex, then use parser combinators.
+    \onslide<+->\item Idris has Text.Lexer and Text.Parser.
+    \onslide<+->\item Both use a deep grammar DSL.
+    \onslide<+->\item Lexer grammar is context-free (Applicative).
+    \onslide<+->\item Parser grammar is context-sensitive (Monad).
+    \onslide<+->\item Lexer sequentially tries \textbf{consuming} token grammars.
+    \onslide<+->\item Parser is a parser combinator lib like Parsec.
+\end{itemize}
+\end{frame}
+
+\frameAndSection{Progress}
+\onslide<+->
+\begin{itemize}
+    \onslide<+->\item Lexer works
+    \onslide<+->\item AST is defined
+    \onslide<+->\item Parsing is WIP
+\end{itemize}
+\end{frame}
+
+\frameAndSection{Grammar changes: front}
+\onslide<+->
+\begin{itemize}
+    \onslide<+->\item Generally slightly more C-like.
+    \onslide<+->\item Compound statements are just statements.
+    \onslide<+->\item Control structures affect any statement.
+    \onslide<+->\item Any expression can be a statement.
+    \onslide<+->\item The empty function is legal (:: -> Void).
+    \onslide<+->\item String is a type, and literals exist.
+\end{itemize}
+\end{frame}
+
+\frameAndSection{Grammar changes: back}
+\onslide<+->
+\begin{itemize}
+    \onslide<+->\item Some refactoring of left-recursion.
+    \onslide<+->\item Int literals are positive.
+    \onslide<+->\item Operators and expressions have \textbf{levels}.
+    \onslide<+->\item Lower levels bind more strongly. 
+    \onslide<+->\item Associativity is enforced by level bias. 
+\end{itemize}
+\end{frame}
+
+\frameAndSection{AST}
+\onslide<+->
+\begin{itemize}
+    \onslide<+->\item Multi-type AST, typecheck guarantees legal parse.
+    \onslide<+->\item Every non-terminal is a datatype (as are some terminals).
+    \onslide<+->\item Every production rule is a constructor.
+    \onslide<+->\item The grammar has been inlined slightly in translation.
+    \onslide<+->\item We want annotations! Now, location, later, types.
+    \onslide<+->\item Every constructor has a final "note" argument.
+    \onslide<+->\item Reuse: polymorphic in noteType.
+\end{itemize}
+\end{frame}
+
+\fframeAndSection{AST code example: Expression levels}
+\onslide<+->
+\onslide<+->
+Let's take a look at a stripped-down version of the AST for Expr.
+\onslide<+->
+% START CODE
+\begin{Verbatim}[commandchars=\\\{\}]
+\IdrisKeyword{data} \IdrisType{Expr} : (\IdrisType{\IdrisBound{n}:Nat}) -> \IdrisType{Type} \IdrisKeyword{where}
+  \IdrisData{LOpExpr} : \IdrisType{Expr} (\IdrisData{S} \IdrisImplicit{n})->\IdrisType{LOp} \IdrisImplicit{n}->\IdrisType{Expr} \IdrisImplicit{n}->\IdrisType{Expr} (\IdrisData{S} \IdrisImplicit{n}\IdrisFunction{+}\IdrisImplicit{k})
+  \IdrisData{LitNum} : \{\IdrisImplicit{k}:\IdrisType{Nat}\} -> \IdrisType{Nat} -> \IdrisType{Expr} (\IdrisData{0}\IdrisFunction{+}\IdrisImplicit{k})
+  \IdrisData{ParenExpr} : \{\IdrisImplicit{k}:\IdrisType{Nat}\} -> \IdrisType{Expr} \IdrisImplicit{n} -> \IdrisType{Expr} (\IdrisData{0}\IdrisFunction{+}\IdrisImplicit{k})
+  \IdrisData{UnOpExpr} : \{\IdrisImplicit{k}:\IdrisType{Nat}\} -> \IdrisType{UnOp} \IdrisImplicit{n} -> \IdrisType{Expr} \IdrisImplicit{n} -> \IdrisType{Expr} (\IdrisImplicit{n}\IdrisFunction{+}\IdrisImplicit{k})
+\end{Verbatim}
+% END CODE
+\onslide<+->
+\begin{itemize}
+    \item \IdrisImplicit{k} is a "slack variable", turning strict equalities into bounds.
+\onslide<+->
+    \item Note: \{\IdrisImplicit{k}:\IdrisType{Nat}\} can be (and in reality is) left out.
+\onslide<+->
+    \item Importantly, \IdrisType{LOp} constructors produce fixed levels.
+\onslide<+->
+    \item \IdrisData{Plus}:\IdrisType{LOp} \IdrisData{6} and
+        \IdrisData{Mult}:\IdrisType{LOp} \IdrisData{4} guarantee
+        \IdrisData{Mult} binds more strongly.
+\onslide<+->
+    \item Reality: more constructors, annotation, proper defined constants.
+\onslide<+->
+    \item Additionally, \IdrisData{LitNum} is part of \IdrisData{Lit}.
+\end{itemize}
+\end{frame}
+
+\frameAndSection{Parsing left-recursion}
+\onslide<+->
+\begin{itemize}
+    \onslide<+->\item Left recursion context-free is hard...
+    \onslide<+->\item Parser combinators are context-\textbf{sensitive}.
+    \onslide<+->\item Parsing weaker grammars using stronger ones is easy.
+    \onslide<+->\item Parse left side first, bind as context parsing rest.
+    \onslide<+->\item \IdrisFunction{chainl} combinator does this, using
+        \IdrisFunction{>>=} . 
+    \onslide<+->\item Unfortunately, it's not in Text.Parser.
+    \onslide<+->\item However, \IdrisFunction{>>=} is, so we'll be able to build
+        it.
+    \onslide<+->\item Next up: rewrite \IdrisFunction{chainl} to deal with
+        levels.
+\end{itemize}
+\end{frame}
+
+\frameAndSection{Questions}
+\onslide<+->
+\end{frame}
+
+\end{document}
+
+% vim: spell spelllang=en
