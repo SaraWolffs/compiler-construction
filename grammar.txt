@@ -91,8 +91,6 @@ UnOp notlevel = Op '!'
 
     Args   = Exp toplevel <+> [Special ',' <+> Args] // Renamed from ActArgs
     FunCall = Id <+> Parens ([Args])
-    Args   = Exp toplevel <+> [Special ',' <+> Args] // Renamed from ActArgs
-    FunCall = Id <+> Parens ([Args])
 
 
 
