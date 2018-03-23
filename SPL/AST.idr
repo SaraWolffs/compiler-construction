@@ -68,7 +68,7 @@ ITyFromLitTy Bol = Bool
 
 data Expr : Nat -> (nTy:Type) -> Type where
   Lit       : {t:LitTy} -> (val:ITyFromLitTy t) -> (s:nTy) -> Expr (AtomLevel+k) nTy
-  Nil       : (s:nTy) -> Expr (AtomLevel+k) nTy
+  SNil      : (s:nTy) -> Expr (AtomLevel+k) nTy
   Var       : (vid:Id nTy) -> (field:Field nTy) -> (s:nTy) -> Expr (AtomLevel+k) nTy
   ParenExpr : (wrapped:Expr TopLevel nTy) -> (s:nTy) -> Expr (AtomLevel+k) nTy
   PairExpr  : (left:Expr TopLevel nTy) -> (right:Expr TopLevel nTy) -> 
@@ -77,9 +77,9 @@ data Expr : Nat -> (nTy:Type) -> Type where
               (s:nTy) -> Expr (AtomLevel+k) nTy
   UnOpExpr  : (op:UnOp n nTy) -> (e:Expr n nTy) -> (s:nTy) -> Expr (n+k) nTy
   LOpExpr   : (l:Expr (S n) nTy) -> (op:LOp n nTy) -> (r:Expr n nTy) ->
-              Expr (S n + k) nTy
+              (s:nTy) -> Expr (S n + k) nTy
   ROpExpr   : (l:Expr n nTy) -> (op:ROp n nTy) -> (r:Expr (S n) nTy) ->
-              Expr (S n + k) nTy
+              (s:nTy) -> Expr (S n + k) nTy
 
 data Stmt : (nTy:Type) -> Type where
   IfElse    : (cond:Expr TopLevel nTy) -> Stmt nTy -> Maybe (Stmt nTy) -> 
