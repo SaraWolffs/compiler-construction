@@ -92,3 +92,24 @@ braced = between (brac '{') (brac '}')
 pair : (build:a -> a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
 pair build p = parens (uncurry build) [| (\l,_,r=>(l,r)) p (special ",") p |]
 
+foldr1' : (a -> a -> a) -> (l:List a) -> {auto ok:NonEmpty l} -> a
+foldr1' f [] impossible
+foldr1' f (x :: xs) = foldr f x xs
+
+dOp : {a:Nat->Type->Type} -> String -> (build:LocNote -> a n LocNote) -> 
+      Parser {c=True} (n:Nat ** a n LocNote)
+dOp str build = MkDPair _ . build <$> op str
+
+lop : (Parser {c=True} (n:Nat ** LOp n LocNote))
+lop = foldr1' (<|>) [ 
+              dOp "*"  Mult, dOp "/"  Div  , dOp "%"  Mod, 
+              dOp "+"  Plus, dOp "-"  Minus, 
+              dOp "<"  Lt  , dOp ">"  Gt   , dOp "<=" Leq, dOp ">=" Geq, 
+              dOp "==" Eq  , dOp "!=" Neq  , 
+              dOp "&&" And , dOp "||" Or   ]
+              
+rop : (Parser {c=True} (n:Nat ** ROp n LocNote))
+rop = dOp ":" Cons
+
+unop : (Parser {c=True} (n:Nat ** UnOp n LocNote))
+unop = foldr1' (<|>) [ dOp "-" Neg, dOp "!"  Not ]
