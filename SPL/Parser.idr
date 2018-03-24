@@ -54,6 +54,11 @@ ident = terminal $ \x=>case tok x of
                             TokId s => Just (MkId s (at x))
                             _ => Nothing
 
+selector : Consume Selector
+selector = terminal $ \x=>case tok x of 
+                            TokField s => Just (MkSel s (at x))
+                            _ => Nothing
+
 require : (req:SplToken) -> Structure
 require req = terminal $ \x=>if tok x == req then Just (at x) else Nothing
 
@@ -114,8 +119,18 @@ rop = dOp ":" Cons
 unop : (Parser {c=True} (n:Nat ** UnOp n LocNote))
 unop = foldr1' (<|>) [ dOp "-" Neg, dOp "!"  Not ]
 
+var : Consume (Expr AtomLevel)
+var = do vid <- ident
+         field <- many selector
+         pure (Var vid (MkField field) (foldl span (note vid) (map note field)))
+
 mutual 
   atom : Consume (Expr AtomLevel)
-  atom = lit <|> SNil <$> special "[]"
+  atom = lit <|> SNil <$> special "[]" <|> var <|> parens ParenExpr expr <|>
+         pair PairExpr expr <|> 
+         (ident >>= \fid=> parens 
+            (\args,loc=>FunCall fid args (span (note fid) loc)) 
+            (sepBy (special ",") expr)) 
   shunt : (n:Nat) -> Consume (Expr n)
   expr : Consume (Expr TopLevel)
+  expr = shunt TopLevel
