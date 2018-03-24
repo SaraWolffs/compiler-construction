@@ -81,6 +81,18 @@ data Expr : Nat -> (nTy:Type) -> Type where
   ROpExpr   : (l:Expr n nTy) -> (op:ROp n nTy) -> (r:Expr (S n) nTy) ->
               (s:nTy) -> Expr (S n + k) nTy
 
+--increase slack
+relax : Expr n nTy -> Expr (n+k) nTy
+relax (Lit val s) = Lit val s
+relax (SNil s) = SNil s
+relax (Var vid field s) = (Var vid field s)
+relax (ParenExpr wrapped s) = (ParenExpr wrapped s)
+relax (PairExpr left right s) = (PairExpr left right s)
+relax (FunCall fid args s) = (FunCall fid args s)
+relax {k=d} (UnOpExpr {n} {k} op e   s) = rewrite sym (plusAssociative n k d) in (UnOpExpr op e   s)
+relax {k=d} (LOpExpr  {n} {k} l op r s) = rewrite sym (plusAssociative n k d) in (LOpExpr  l op r s)
+relax {k=d} (ROpExpr  {n} {k} l op r s) = rewrite sym (plusAssociative n k d) in (ROpExpr  l op r s)
+
 data Stmt : (nTy:Type) -> Type where
   IfElse    : (cond:Expr TopLevel nTy) -> Stmt nTy -> Maybe (Stmt nTy) -> 
               (s:nTy) -> Stmt nTy
