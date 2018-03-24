@@ -143,3 +143,14 @@ SplDef nTy = Either (VarDef nTy) (FuncDef nTy)
 
 Spl : (nTy:Type) -> Type
 Spl nTy = List (SplDef nTy)
+
+interface Functor t => Annotated (t:Type -> Type) where
+  note   : t nTy -> nTy
+  assign : nTy -> t nTy -> t nTy
+  mutate : (nTy -> nTy) -> t nTy -> t nTy
+
+interface Annotated t => VerifiedAnnotated (t:Type -> Type) where
+  annotatedIdentity : (x:t nTy) -> x = assign (note x) x
+  annotatedNoteIdentity : (x:t nTy) -> (s:nTy) -> s = note (assign s x)
+  annotatedMutate : (x:t nTy) -> (f:nTy -> nTy) -> mutate f x = assign (f (note x)) x
+  annotatedOverwrite : (x:t nTy) -> (s1:nTy) -> (s2:nTy) -> assign s1 x = assign s1 (assign s2 x)
