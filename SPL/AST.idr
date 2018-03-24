@@ -81,6 +81,12 @@ data Expr : Nat -> (nTy:Type) -> Type where
   ROpExpr   : (l:Expr n nTy) -> (op:ROp n nTy) -> (r:Expr (S n) nTy) ->
               (s:nTy) -> Expr (S n + k) nTy
 
+Atom : (nTy:Type) -> Type
+Atom = Expr AtomLevel
+
+Expression : (nTy:Type) -> Type
+Expression = Expr TopLevel;
+
 --increase slack
 relax : Expr n nTy -> Expr (n+k) nTy
 relax (Lit val s) = Lit val s

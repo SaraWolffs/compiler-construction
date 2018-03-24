@@ -125,12 +125,12 @@ var = do vid <- ident
          pure (Var vid (MkField field) (foldl span (note vid) (map note field)))
 
 mutual 
-  atom : Consume (Expr AtomLevel)
+  atom : Consume Atom
   atom = lit <|> SNil <$> special "[]" <|> var <|> parens ParenExpr expr <|>
          pair PairExpr expr <|> 
          (ident >>= \fid=> parens 
             (\args,loc=>FunCall fid args (span (note fid) loc)) 
             (sepBy (special ",") expr)) 
   shunt : (n:Nat) -> Consume (Expr n)
-  expr : Consume (Expr TopLevel)
+  expr : Consume Expression
   expr = shunt TopLevel
