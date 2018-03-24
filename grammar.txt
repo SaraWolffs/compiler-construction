@@ -75,7 +75,15 @@ ROp conslevel = Op ':'
 UnOp neglevel = Op '-'
 UnOp notlevel = Op '!'
 
-
+#NOTE: If expanding this, we might want to collapse all operators into a single
+# one with a fixity on top of the current level system. Possible fixities, by
+# arity:
+# Unary: firstfix, prefix, postfix, lastfix, wrapping
+# Binary: Left, right, any, non
+# Multary: intercalated (close, right-open, left-open, open), recipe
+# Note that intercalated is a special case of recipe, and binary and unary
+# are special cases of multary. However, disambiguation between unary and binary 
+# '-' will become necessary.
 #mutual
     #SPECIAL: CHAINL(..), parse as contex-sensitive by monad-only chainl combinator
     #compound(try all matching alternatives, in order of appearance)
