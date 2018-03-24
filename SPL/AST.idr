@@ -154,3 +154,22 @@ interface Annotated t => VerifiedAnnotated (t:Type -> Type) where
   annotatedNoteIdentity : (x:t nTy) -> (s:nTy) -> s = note (assign s x)
   annotatedMutate : (x:t nTy) -> (f:nTy -> nTy) -> mutate f x = assign (f (note x)) x
   annotatedOverwrite : (x:t nTy) -> (s1:nTy) -> (s2:nTy) -> assign s1 x = assign s1 (assign s2 x)
+
+Functor Id where
+  map f (MkId name s) = MkId name (f s)
+
+Functor Selector where
+  map f (MkSel sel s) = MkSel sel (f s)
+  
+Functor Field where
+  map f (MkField sels) = MkField (map (map f) sels)
+
+Annotated Id where
+  note (MkId name s) = s
+  assign s (MkId name _) = MkId name s
+  mutate = map
+
+Annotated Selector where
+  note (MkSel sel s) = s
+  assign s (MkSel sel _) = MkSel sel s
+  mutate = map
