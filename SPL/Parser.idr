@@ -114,3 +114,8 @@ rop = dOp ":" Cons
 unop : (Parser {c=True} (n:Nat ** UnOp n LocNote))
 unop = foldr1' (<|>) [ dOp "-" Neg, dOp "!"  Not ]
 
+mutual 
+  atom : Consume (Expr AtomLevel)
+  atom = lit <|> SNil <$> special "[]"
+  shunt : (n:Nat) -> Consume (Expr n)
+  expr : Consume (Expr TopLevel)
