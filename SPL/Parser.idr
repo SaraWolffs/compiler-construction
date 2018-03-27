@@ -131,6 +131,11 @@ mutual
          (ident >>= \fid=> parens 
             (\args,loc=>FunCall fid args (span (note fid) loc)) 
             (sepBy (special ",") expr)) 
-  shunt : (n:Nat) -> Consume (Expr n)
+
+  subexpr : (n:Nat) -> Inf (Grammar RichTok True (Expr n LocNote))
+  subexpr Z = ?subexpratom
+  subexpr _ = ?subexprhole
+
+  extendexpr : Expr m LocNote -> (n:Nat) -> {auto ok:LTE m n} -> Allow (Expr n)
   expr : Consume Expression
-  expr = shunt TopLevel
+  expr = subexpr TopLevel
