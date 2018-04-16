@@ -83,7 +83,6 @@ lit = terminal $ \x=>case tok x of
                           TokKey "False" => Just (Lit {t=Bol} False (at x))
                           _ => Nothing
 
-
 between : (open:Structure) -> (close:Structure) -> 
           (build:a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
 between open close build p = [| (\l,m,r=> build m (span l r)) open p close |]
@@ -94,8 +93,9 @@ parens = between (brac '(') (brac ')')
 braced : (build:a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
 braced = between (brac '{') (brac '}')
 
-pair : (build:a -> a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
-pair build p = parens (uncurry build) [| (\l,_,r=>(l,r)) p (special ",") p |]
+pair : (build:a -> a -> LocNote -> b LocNote) -> (p:Parser {c} a) -> Consume b
+pair {c} build p = parens (uncurry build) 
+    [| (\l,_,r=>(l,r)) p (delay c (special ",")) (delay (c || True) p) |]
 
 foldr1' : (a -> a -> a) -> (l:List a) -> {auto ok:NonEmpty l} -> a
 foldr1' f [] impossible
@@ -124,16 +124,30 @@ var = do vid <- ident
          field <- many selector
          pure (Var vid (MkField field) (foldl span (note vid) (map note field)))
 
+recbetween : (open:Structure) -> (close:Structure) -> 
+          (build:a -> LocNote -> b LocNote) -> (p:Inf (Parser a)) -> Consume b
+recbetween open close build p = [| (\l,m,r=> build m (span l r)) open p close |]
+
+recparens : (build:a -> LocNote -> b LocNote) -> (p:Inf (Parser a)) -> Consume b
+recparens = recbetween (brac '(') (brac ')')
+
+recpair : (build:a -> a -> LocNote -> b LocNote) -> (p:Inf (Parser {c} a)) -> Consume b
+recpair {c} build p = parens (uncurry build) 
+    [| (\l,_,r=>(l,r)) p (delay c (special ",")) (delay (c || True) (Force p)) |]
+
 mutual 
   atom : Consume Atom
-  atom = lit <|> SNil <$> special "[]" <|> var <|> parens ParenExpr expr <|>
-         pair PairExpr expr <|> 
-         (ident >>= \fid=> parens 
-            (\args,loc=>FunCall fid args (span (note fid) loc)) 
-            (sepBy (special ",") expr)) 
+  atom = do l <- (brac '(')
+            pure (ParenExpr !expr (span l !(brac ')')))
+--lit <|> SNil <$> special "[]" <|> var <|> 
+        -- recpair PairExpr expr <|> 
+  --       (ident >>= \fid=> parens 
+   --         (\args,loc=>FunCall fid args (span (note fid) loc)) 
+           -- (sepBy (special ",") expr)) 
+            
 
-  subexpr : (n:Nat) -> Inf (Grammar RichTok True (Expr n LocNote))
-  subexpr Z = ?subexpratom
+  subexpr : (n:Nat) -> Consume (Expr n)
+  subexpr Z = atom
   subexpr _ = ?subexprhole
 
   extendexpr : Expr m LocNote -> (n:Nat) -> {auto ok:LTE m n} -> Allow (Expr n)
