@@ -126,14 +126,28 @@ var = do vid <- ident
 
 mutual 
   atom : Consume Atom
-  atom = lit <|> SNil <$> special "[]" <|> var <|> parens ParenExpr expr <|>
+  atom = funcall <|> lit <|> SNil <$> special "[]" <|> var <|> parenexpr <|> pairexpr 
+    where
+      exprlist : Parser {c=True} (List $ Expression LocNote, LocNote)
+      exprlist = ?exprlhole
+      funcall : Consume Atom
+      funcall = do fid <- ident
+                   argstup <- exprlist 
+                   pure $ FunCall fid (fst argstup) $ span (note fid) (snd argstup)
+      parenexpr : Consume Atom
+      parenexpr = ?pexprhole
+      pairexpr : Consume Atom
+      pairexpr = ?prexprhole
+         {-
+         parens ParenExpr expr <|>
          pair PairExpr expr <|> 
          (ident >>= \fid=> parens 
             (\args,loc=>FunCall fid args (span (note fid) loc)) 
             (sepBy (special ",") expr)) 
+            -}
 
-  subexpr : (n:Nat) -> Inf (Grammar RichTok True (Expr n LocNote))
-  subexpr Z = ?subexpratom
+  subexpr : (n:Nat) -> Consume $ Expr n
+  subexpr Z = atom
   subexpr _ = ?subexprhole
 
   extendexpr : Expr m LocNote -> (n:Nat) -> {auto ok:LTE m n} -> Allow (Expr n)
