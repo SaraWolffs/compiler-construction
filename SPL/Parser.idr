@@ -126,18 +126,19 @@ var = do vid <- ident
 
 mutual 
   atom : Consume Atom
-  atom = funcall <|> lit <|> SNil <$> special "[]" <|> var <|> parenexpr <|> pairexpr 
+  atom = funcall <|> lit <|> SNil <$> special "[]" <|> var
     where
       exprlist : Parser {c=True} (List $ Expression LocNote, LocNote)
-      exprlist = ?exprlhole
+      exprlist = do oloc <- special "("
+                    exprs <- sepBy (special ",") expr
+                    cloc <- special ")"
+                    pure (exprs, span oloc cloc)
       funcall : Consume Atom
       funcall = do fid <- ident
-                   argstup <- exprlist 
-                   pure $ FunCall fid (fst argstup) $ span (note fid) (snd argstup)
-      parenexpr : Consume Atom
-      parenexpr = ?pexprhole
-      pairexpr : Consume Atom
-      pairexpr = ?prexprhole
+                   argtup <- exprlist 
+                   pure $ FunCall fid (fst argtup) $ span (note fid) (snd argtup)
+      pexpr : (List $ Expression LocNote, LocNote) -> Atom LocNote
+      pexpr _ = ?phole
          {-
          parens ParenExpr expr <|>
          pair PairExpr expr <|> 
