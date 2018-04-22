@@ -84,17 +84,30 @@ lit = terminal $ \x=>case tok x of
                           _ => Nothing
 
 
-between : (open:Structure) -> (close:Structure) -> 
+between_app : (open:Structure) -> (close:Structure) -> 
           (build:a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
-between open close build p = [| (\l,m,r=> build m (span l r)) open p close |]
+between_app open close build p = [| (\l,m,r=> build m (span l r)) open p close |]
 
-parens : (build:a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
+between : (open:Structure) -> (close:Structure) -> 
+          (build:a -> LocNote -> b LocNote) -> (p:Inf $ Parser {c=cp} a) -> Inf (Consume b)
+between open close build {cp=True} p  = do l <- open
+                                           m <- p
+                                           r <- close
+                                           pure (build m $ span l r)
+between open close build {cp=False} p = do l <- open
+                                           m <- p
+                                           r <- close
+                                           pure (build m $ span l r)
+  
+
+
+parens : (build:a -> LocNote -> b LocNote) -> (p:Inf $ Parser {c} a) -> Inf $ Consume b
 parens = between (brac '(') (brac ')')
 
-braced : (build:a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
+braced : (build:a -> LocNote -> b LocNote) -> (p:Inf $ Parser {c} a) -> Inf $ Consume b
 braced = between (brac '{') (brac '}')
 
-pair : (build:a -> a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
+pair : (build:a -> a -> LocNote -> b LocNote) -> (p:Inf $ Parser {c} a) -> Inf $ Consume b
 pair build p = parens (uncurry build) [| (\l,_,r=>(l,r)) p (special ",") p |]
 
 foldr1' : (a -> a -> a) -> (l:List a) -> {auto ok:NonEmpty l} -> a
@@ -124,17 +137,39 @@ var = do vid <- ident
          field <- many selector
          pure (Var vid (MkField field) (foldl span (note vid) (map note field)))
 
+--  open >>= Delay (\l => Force mid `seq` \m => close `seq` \r => pure (m,span l r))
+
+between' : (build:a -> LocNote -> b) -> Grammar RichTok True LocNote -> Inf (Grammar RichTok c a) -> Grammar RichTok True LocNote -> 
+           Grammar RichTok True b
+between' {c=True} build open mid close = (do l <- open
+                                             e <- mid
+                                             (close >>= pure . build e . span l))
+between' {c=False} build open mid close = (do l <- open
+                                              e <- mid
+                                              (close >>= pure . build e . span l))
+
+%inline
+between'' : (build:a -> LocNote -> b) -> Grammar RichTok True LocNote -> Inf (Grammar RichTok True a) -> Grammar RichTok True LocNote -> 
+           Grammar RichTok True b
+between'' build open mid close = (do l <- open
+                                     e <- mid
+                                     (close >>= pure . build e . span l))
+
 mutual 
   atom : Consume Atom
-  atom = lit <|> SNil <$> special "[]" <|> var <|> parens ParenExpr expr <|>
+  atom = lit <|> SNil <$> special "[]" <|> var <|> (between'' ParenExpr (brac '(') expr (brac ')') )  
+--expr : Consume Expression
+--expr = (map lift atom) <|> ...
+--(parens ParenExpr expr)
+  {- <|>
          pair PairExpr expr <|> 
          (ident >>= \fid=> parens 
             (\args,loc=>FunCall fid args (span (note fid) loc)) 
-            (sepBy (special ",") expr)) 
+            (sepBy (special ",") expr)) -}
 
-  subexpr : (n:Nat) -> Inf (Grammar RichTok True (Expr n LocNote))
-  subexpr Z = ?subexpratom
-  subexpr _ = ?subexprhole
+  subexpr : (n:Nat) -> Grammar RichTok True (Expr n LocNote)
+  subexpr Z = atom
+  subexpr (S n) = map (relax' {k=1}) (subexpr n)
 
   extendexpr : Expr m LocNote -> (n:Nat) -> {auto ok:LTE m n} -> Allow (Expr n)
   expr : Consume Expression
