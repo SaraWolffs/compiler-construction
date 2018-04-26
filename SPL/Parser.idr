@@ -142,6 +142,8 @@ preop = (>>=) {c2=False} unop (\(n ** o)=> pure $ SPre n o)
 ExprN : Type
 ExprN = (n:Nat ** Expr n LocNote)
 
+ConsumeIf : Bool -> Type -> Type
+
 
 mutual 
   -- This bit of DRY horror brought to you by finicky totality checkers.
@@ -171,12 +173,18 @@ mutual
   atom : Parser {c=True} ExprN
   atom = map (\a=>(0 ** a)) bare_atom 
 
-  dijkstra : (estack:List ExprN) -> (ostack: List ShuntOp) -> Allow Expression
+  dijkstra : (open:Bool) -> (estack:List ExprN) -> {auto ok:NonEmpty estack} ->
+             (ostack:List ShuntOp) -> 
+             Parser {c=open} (Expression LocNote)
+  dijkstra False (e :: es) [] = ?dijkstra_rhs_4
+  dijkstra False (e :: es) (o::os) = ?dijkstra_rhs_4
+  dijkstra True (e :: es) ostack = ?dijkstra_rhs_3
+
   
   subexpr : (n:Nat) -> Consume $ Expr n
   subexpr Z = bare_atom
   subexpr (S n) = do left <- bare_atom
-                     fail {c=False} "Uncomplete definition of subexpr"
+                     fail {c=False} "Incomplete definition of subexpr"
 
   extendexpr : Expr m LocNote -> (n:Nat) -> {auto ok:LTE m n} -> Allow (Expr n)
   expr : Consume Expression
