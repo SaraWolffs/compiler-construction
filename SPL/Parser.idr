@@ -127,20 +127,26 @@ var = do vid <- ident
          field <- many selector
          pure (Var vid (MkField field) (foldl span (note vid) (map note field)))
 
-data ShuntFrame : Type where
-  SAtom : Atom LocNote -> ShuntFrame
-  SLeft : (n:Nat) -> LOp n LocNote -> ShuntFrame
-  SRight : (n:Nat) -> ROp n LocNote -> ShuntFrame
-  SPre : (n:Nat) -> UnOp n LocNote -> ShuntFrame
+data ShuntOp : Type where
+  SLeft : (n:Nat) -> LOp n LocNote -> ShuntOp
+  SRight : (n:Nat) -> ROp n LocNote -> ShuntOp
+  SPre : (n:Nat) -> UnOp n LocNote -> ShuntOp
 
-inop : Parser {c=True} ShuntFrame
+inop : Parser {c=True} ShuntOp
 inop = (>>=) {c2=False} lop (\(n ** o)=> pure $ SLeft n o) <|>
        (>>=) {c2=False} rop (\(n ** o)=> pure $ SRight n o)
 
+preop : Parser {c=True} ShuntOp
+preop = (>>=) {c2=False} unop (\(n ** o)=> pure $ SPre n o)
+
+ExprN : Type
+ExprN = (n:Nat ** Expr n LocNote)
+
+
 mutual 
   -- This bit of DRY horror brought to you by finicky totality checkers.
-  atom : Consume Atom
-  atom = recexpr <|> lit <|> SNil <$> special "[]" <|> var
+  bare_atom : Consume Atom
+  bare_atom = recexpr <|> lit <|> SNil <$> special "[]" <|> var
     where
       sepexpr : Parser {c=False} (List $ Expression LocNote)
       sepexpr = sepBy (special ",") expr
@@ -161,14 +167,15 @@ mutual
                     exprs <- sepexpr -- REPORT: Totality checker issue: beta reduction kills here
                     cloc <- special ")"
                     build exprs $ span oloc cloc
+  
+  atom : Parser {c=True} ExprN
+  atom = map (\a=>(0 ** a)) bare_atom 
 
-  dijkstra : List ShuntFrame -> Consume Expression
-  dijkstra [] = ?dijkstraempty
-  dijkstra (h::t) = ?dijkstranonempty
+  dijkstra : (estack:List ExprN) -> (ostack: List ShuntOp) -> Allow Expression
   
   subexpr : (n:Nat) -> Consume $ Expr n
-  subexpr Z = atom
-  subexpr (S n) = do left <- atom
+  subexpr Z = bare_atom
+  subexpr (S n) = do left <- bare_atom
                      fail {c=False} "Uncomplete definition of subexpr"
 
   extendexpr : Expr m LocNote -> (n:Nat) -> {auto ok:LTE m n} -> Allow (Expr n)
