@@ -7,6 +7,8 @@ import Text.Parser
 
 import Data.Combinators.Applicative
 import Control.Pipeline
+import Data.List
+import Data.So
 
 %default total
 
@@ -142,8 +144,12 @@ preop = (>>=) {c2=False} unop (\(n ** o)=> pure $ SPre n o)
 ExprN : Type
 ExprN = (n:Nat ** Expr n LocNote)
 
-ConsumeIf : Bool -> Type -> Type
+lteDiff : LTE n m -> (d:Nat ** m=n+d)
+lteDiff {n = Z} {m = m} LTEZero = (m ** Refl)
+lteDiff {n = (S n')} {m = (S m')} (LTESucc lte) = let (d**prf)=lteDiff lte in (d ** cong prf)
 
+lteRelax : LTE n m -> Expr n LocNote -> Expr m LocNote
+lteRelax lte e = let (_**prf)=lteDiff lte in rewrite prf in relax e
 
 mutual 
   -- This bit of DRY horror brought to you by finicky totality checkers.
@@ -173,11 +179,23 @@ mutual
   atom : Parser {c=True} ExprN
   atom = map (\a=>(0 ** a)) bare_atom 
 
-  dijkstra : (open:Bool) -> (estack:List ExprN) -> {auto ok:NonEmpty estack} ->
+            -- (okn:(x:ExprN) -> Elem x estack -> fst x `LTE` TopLevel) ->
+  dijkstra : (c:Bool) -> (estack:List ExprN) -> {auto oke:Either (So c) (NonEmpty estack)} ->
              (ostack:List ShuntOp) -> 
-             Parser {c=open} (Expression LocNote)
-  dijkstra False (e :: es) [] = ?dijkstra_rhs_4
-  dijkstra False (e :: es) (o::os) = ?dijkstra_rhs_4
+             Parser {c} (Expression LocNote)
+  dijkstra False [] {oke=Left _} _ impossible
+  dijkstra False [(n**e)] [] with (isLTE n TopLevel)
+    | (Yes lte) = option (lteRelax lte e) (inop >>= \o=> dijkstra True [(n**e)] [o]) 
+    | (No _) = fail "Impossibly high expression level in shunting yard."
+  dijkstra False (x :: x' :: xs) [] = fail "Operator stack underflow in shunting yard."
+  dijkstra False [(n**e)] (SPre on o::os) with (isLTE n on)
+    | Yes lte = (inop >>= \o'=> dijkstra True [(n**e)] (o'::SPre on o::os)) <|>
+                (dijkstra False [(_ ** UnOpExpr {k=Z} o (lteRelax lte e) (span (note o) (note e)))] os)
+    | (No _) = ?dhole2
+  dijkstra False [e] (o::os) = fail "Expression stack underflow in shunting yard."
+  dijkstra False ((rn**r) :: (ln**l) :: xs) (SLeft on o::os) = ?dijkstra_rhs_4
+  dijkstra False ((rn**r) :: (ln**l) :: xs) (o::os) = ?dijkstra_rhs_5
+  dijkstra True [] ostack = ?dijkstra_h6
   dijkstra True (e :: es) ostack = ?dijkstra_rhs_3
 
   
