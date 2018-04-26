@@ -97,6 +97,7 @@ braced = between (brac '{') (brac '}')
 pair : (build:a -> a -> LocNote -> b LocNote) -> (p:Parser a) -> Consume b
 pair build p = parens (uncurry build) [| (\l,_,r=>(l,r)) p (special ",") p |]
 
+
 foldr1' : (a -> a -> a) -> (l:List a) -> {auto ok:NonEmpty l} -> a
 foldr1' f [] impossible
 foldr1' f (x :: xs) = foldr f x xs
@@ -119,37 +120,56 @@ rop = dOp ":" Cons
 unop : (Parser {c=True} (n:Nat ** UnOp n LocNote))
 unop = foldr1' (<|>) [ dOp "-" Neg, dOp "!"  Not ]
 
+
+
 var : Consume (Expr AtomLevel)
 var = do vid <- ident
          field <- many selector
          pure (Var vid (MkField field) (foldl span (note vid) (map note field)))
 
-mutual 
-  atom : Consume Atom
-  atom = funcall <|> lit <|> SNil <$> special "[]" <|> var
-    where
-      exprlist : Parser {c=True} (List $ Expression LocNote, LocNote)
-      exprlist = do oloc <- special "("
-                    exprs <- sepBy (special ",") expr
-                    cloc <- special ")"
-                    pure (exprs, span oloc cloc)
-      funcall : Consume Atom
-      funcall = do fid <- ident
-                   argtup <- exprlist 
-                   pure $ FunCall fid (fst argtup) $ span (note fid) (snd argtup)
-      pexpr : (List $ Expression LocNote, LocNote) -> Atom LocNote
-      pexpr _ = ?phole
-         {-
-         parens ParenExpr expr <|>
-         pair PairExpr expr <|> 
-         (ident >>= \fid=> parens 
-            (\args,loc=>FunCall fid args (span (note fid) loc)) 
-            (sepBy (special ",") expr)) 
-            -}
+data ShuntFrame : Type where
+  SAtom : Atom LocNote -> ShuntFrame
+  SLeft : (n:Nat) -> LOp n LocNote -> ShuntFrame
+  SRight : (n:Nat) -> ROp n LocNote -> ShuntFrame
+  SPre : (n:Nat) -> UnOp n LocNote -> ShuntFrame
 
+inop : Parser {c=True} ShuntFrame
+inop = (>>=) {c2=False} lop (\(n ** o)=> pure $ SLeft n o) <|>
+       (>>=) {c2=False} rop (\(n ** o)=> pure $ SRight n o)
+
+mutual 
+  -- This bit of DRY horror brought to you by finicky totality checkers.
+  atom : Consume Atom
+  atom = recexpr <|> lit <|> SNil <$> special "[]" <|> var
+    where
+      sepexpr : Parser {c=False} (List $ Expression LocNote)
+      sepexpr = sepBy (special ",") expr
+      mkPexpr : (es:List $ Expression LocNote) -> {auto ok:NonEmpty es} -> LocNote -> Atom LocNote
+      mkPexpr [x] parenloc = ParenExpr x parenloc
+      mkPexpr [r,l] parenloc = PairExpr r l parenloc
+      mkPexpr (x::(x'::xs)) parenloc = PairExpr x (relax $ mkPexpr (x'::xs) parenloc) parenloc
+      -- pexpr => Pair or Paren Expr
+      pexpr : (List $ Expression LocNote) -> (LocNote) -> Allow Atom
+      pexpr [] _ = fail "Unexpected \"()\" (Did you mean to call a function?)"
+      pexpr (x::xs) loc = pure $ mkPexpr (x::xs) loc
+      fcall : Id LocNote -> (List $ Expression LocNote) -> (LocNote) -> Allow Atom
+      fcall fid args loc = pure $ FunCall fid args (span (note fid) loc)
+      recexpr : Consume Atom
+      recexpr =  do build <- option pexpr (map fcall ident)
+                    oloc <- special "("
+                    commit
+                    exprs <- sepexpr -- REPORT: Totality checker issue: beta reduction kills here
+                    cloc <- special ")"
+                    build exprs $ span oloc cloc
+
+  dijkstra : List ShuntFrame -> Consume Expression
+  dijkstra [] = ?dijkstraempty
+  dijkstra (h::t) = ?dijkstranonempty
+  
   subexpr : (n:Nat) -> Consume $ Expr n
   subexpr Z = atom
-  subexpr _ = ?subexprhole
+  subexpr (S n) = do left <- atom
+                     fail {c=False} "Uncomplete definition of subexpr"
 
   extendexpr : Expr m LocNote -> (n:Nat) -> {auto ok:LTE m n} -> Allow (Expr n)
   expr : Consume Expression

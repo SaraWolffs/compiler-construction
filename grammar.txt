@@ -99,6 +99,7 @@ UnOp notlevel = Op '!'
 
     Args   = Exp toplevel <+> [Special ',' <+> Args] // Renamed from ActArgs
     FunCall = Id <+> Parens ([Args])
+#Syntax extension: (a,b,c,...) is translated to (a,(b,c,...)) etc.
 
 
 
