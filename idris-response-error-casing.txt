@@ -1,0 +1,2 @@
+
+(val):Elaborating Prelude.List.:: arg elem: CantUnify False (Builtins.DPair {a_510} {P_511},Just (SourceTerm Builtins.MkDPair {a_510} {P_511} {x_512} {pf_513})) and (Type 0,Just ExpectedType) CantUnify False (Builtins.DPair {a_510} {P_511},Nothing) and (Type 0,Nothing)  in [({pf_513},{P_511} {x_512}),({x_512},{a_510}),({P_511},{a_510} -> Type 0),({a_510},Type 0)] 0 in [({pf_513},{P_511} {x_512}),({x_512},{a_510}),({P_511},{a_510} -> Type 0),({a_510},Type 0)] 0
