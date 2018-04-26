@@ -189,6 +189,40 @@ Functor Selector where
 Functor Field where
   map f (MkField sels) = MkField (map (map f) sels)
 
+Functor (UnOp n) where
+  map f (Neg s) = Neg (f s)
+  map f (Not s) = Not (f s)
+
+Functor (LOp n) where
+  map f (Mult s) = Mult (f s)
+  map f (Div s) = (Div $ f s)
+  map f (Mod s) = (Mod $ f s)
+  map f (Plus s) = (Plus $ f s)
+  map f (Minus s) = (Minus $ f s)
+  map f (Lt s) = (Lt $ f s)
+  map f (Gt s) = (Gt $ f s)
+  map f (Leq s) = (Leq $ f s)
+  map f (Geq s) = (Geq $ f s)
+  map f (Eq s) = (Eq $ f s)
+  map f (Neq s) = (Neq $ f s)
+  map f (And s) = (And $ f s)
+  map f (Or s) = (Or $ f s)
+
+Functor (ROp n) where
+  map f (Cons s) = (Cons $ f s)
+
+Functor (Expr n) where
+  map f (Lit val s) = Lit val (f s)
+  map f (SNil s) = SNil (f s)
+  map f (Var vid field s) = Var (map f vid) (map f field) (f s)
+  map f (ParenExpr wrapped s) = ParenExpr (map f wrapped) (f s)
+  map f (PairExpr left right s) = PairExpr (map f left) (map f right) (f s)
+  map f (FunCall fid args s) = FunCall (map f fid) (assert_total (map (map f) args)) (f s)
+  map f (UnOpExpr op e s) = UnOpExpr (map f op) (map f e) (f s)
+  map f (LOpExpr l op r s) = LOpExpr (map f l) (map f op) (map f r) (f s)
+  map f (ROpExpr l op r s) = ROpExpr (map f l) (map f op) (map f r) (f s)
+
+
 Annotated Id where
   note (MkId name s) = s
   assign s (MkId name _) = MkId name s
@@ -197,4 +231,32 @@ Annotated Id where
 Annotated Selector where
   note (MkSel sel s) = s
   assign s (MkSel sel _) = MkSel sel s
+  mutate = map
+
+Annotated (UnOp n) where
+  note (Neg s) = s
+  note (Not s) = s
+  assign s (Neg x) = Neg s
+  assign s (Not x) = Not s
+  mutate = map
+
+Annotated (Expr n) where
+  note (Lit val s) = s
+  note (SNil s) = s
+  note (Var vid field s) = s
+  note (ParenExpr wrapped s) = s
+  note (PairExpr left right s) = s
+  note (FunCall fid args s) = s
+  note (UnOpExpr op e s) = s
+  note (LOpExpr l op r s) = s
+  note (ROpExpr l op r s) = s
+  assign s (Lit val x) = (Lit val s)
+  assign s (SNil x) = (SNil s)
+  assign s (Var vid field x) = (Var vid field s)
+  assign s (ParenExpr wrapped x) = (ParenExpr wrapped s)
+  assign s (PairExpr left right x) = (PairExpr left right s)
+  assign s (FunCall fid args x) = (FunCall fid args s)
+  assign s (UnOpExpr op e x) = (UnOpExpr op e s)
+  assign s (LOpExpr l op r x) = (LOpExpr l op r s)
+  assign s (ROpExpr l op r x) = (ROpExpr l op r s)
   mutate = map
